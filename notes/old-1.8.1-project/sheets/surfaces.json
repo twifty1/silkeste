@@ -1,0 +1,19 @@
+[
+ {"id":"dust","environment":"Dust","celeste_surface":3,"celeste_name":"Dirt","source":"design: closest Celeste.SurfaceIndex to Silksong GlobalEnums.EnvironmentTypes.Dust","notes":"packed earth"},
+ {"id":"grass","environment":"Grass","celeste_surface":33,"celeste_name":"Grass","source":"design: closest Celeste.SurfaceIndex to Silksong GlobalEnums.EnvironmentTypes.Grass","notes":"grass"},
+ {"id":"bone","environment":"Bone","celeste_surface":8,"celeste_name":"Brick","source":"design: closest Celeste.SurfaceIndex to Silksong GlobalEnums.EnvironmentTypes.Bone","notes":"hard bone floors sound like stone"},
+ {"id":"shallowwater","environment":"ShallowWater","celeste_surface":3,"celeste_name":"Dirt","source":"design: closest Celeste.SurfaceIndex to Silksong GlobalEnums.EnvironmentTypes.ShallowWater","notes":"Celeste has no wading footstep; Silksong still adds its own splashes"},
+ {"id":"metal","environment":"Metal","celeste_surface":7,"celeste_name":"Girder","source":"design: closest Celeste.SurfaceIndex to Silksong GlobalEnums.EnvironmentTypes.Metal","notes":"metal"},
+ {"id":"noeffect","environment":"NoEffect","celeste_surface":8,"celeste_name":"Brick","source":"design: closest Celeste.SurfaceIndex to Silksong GlobalEnums.EnvironmentTypes.NoEffect","notes":"stone, Silksong's default"},
+ {"id":"moss","environment":"Moss","celeste_surface":25,"celeste_name":"CliffsideGrass","source":"design: closest Celeste.SurfaceIndex to Silksong GlobalEnums.EnvironmentTypes.Moss","notes":"soft moss"},
+ {"id":"sand","environment":"Sand","celeste_surface":4,"celeste_name":"Snow","source":"design: closest Celeste.SurfaceIndex to Silksong GlobalEnums.EnvironmentTypes.Sand","notes":"soft crunch"},
+ {"id":"bell","environment":"Bell","celeste_surface":7,"celeste_name":"Girder","source":"design: closest Celeste.SurfaceIndex to Silksong GlobalEnums.EnvironmentTypes.Bell","notes":"bell metal"},
+ {"id":"wetmetal","environment":"WetMetal","celeste_surface":7,"celeste_name":"Girder","source":"design: closest Celeste.SurfaceIndex to Silksong GlobalEnums.EnvironmentTypes.WetMetal","notes":"metal"},
+ {"id":"thinmetal","environment":"ThinMetal","celeste_surface":7,"celeste_name":"Girder","source":"design: closest Celeste.SurfaceIndex to Silksong GlobalEnums.EnvironmentTypes.ThinMetal","notes":"metal"},
+ {"id":"wood","environment":"Wood","celeste_surface":5,"celeste_name":"Wood","source":"design: closest Celeste.SurfaceIndex to Silksong GlobalEnums.EnvironmentTypes.Wood","notes":"wood"},
+ {"id":"silk","environment":"Silk","celeste_surface":17,"celeste_name":"ResortLinens","source":"design: closest Celeste.SurfaceIndex to Silksong GlobalEnums.EnvironmentTypes.Silk","notes":"cloth"},
+ {"id":"wetwood","environment":"WetWood","celeste_surface":5,"celeste_name":"Wood","source":"design: closest Celeste.SurfaceIndex to Silksong GlobalEnums.EnvironmentTypes.WetWood","notes":"wood"},
+ {"id":"runningwater","environment":"RunningWater","celeste_surface":3,"celeste_name":"Dirt","source":"design: closest Celeste.SurfaceIndex to Silksong GlobalEnums.EnvironmentTypes.RunningWater","notes":"as ShallowWater"},
+ {"id":"peakpuff","environment":"PeakPuff","celeste_surface":4,"celeste_name":"Snow","source":"design: closest Celeste.SurfaceIndex to Silksong GlobalEnums.EnvironmentTypes.PeakPuff","notes":"Mount Fay snow"},
+ {"id":"flowerfield","environment":"FlowerField","celeste_surface":33,"celeste_name":"Grass","source":"design: closest Celeste.SurfaceIndex to Silksong GlobalEnums.EnvironmentTypes.FlowerField","notes":"grass"}
+]

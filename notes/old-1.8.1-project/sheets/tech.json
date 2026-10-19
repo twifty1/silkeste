@@ -1,0 +1,9 @@
+[
+ {"id":"super","trigger":"jump during horizontal ground dash","mode":"set","speed_x":260,"speed_y":-105,"x_mult":1,"y_mult":1,"var_jump_time":0.2,"stamina_cost":0,"sfx":"jump_super","source":"Celeste.Player.SuperJump (not ducking)"},
+ {"id":"hyper","trigger":"jump during ducking ground dash (down-diagonal dash on ground)","mode":"set","speed_x":260,"speed_y":-105,"x_mult":1.25,"y_mult":0.5,"var_jump_time":0.2,"stamina_cost":0,"sfx":"jump_superslide","source":"Celeste.Player.SuperJump (Ducking: DuckSuperJumpXMult/YMult)"},
+ {"id":"wavedash","trigger":"diagonal-down air dash lands, then jump while still dashing","mode":"set","speed_x":260,"speed_y":-105,"x_mult":1.25,"y_mult":0.5,"var_jump_time":0.2,"stamina_cost":0,"sfx":"jump_superslide","source":"Celeste.Player.OnCollideV ducks the dash, DashUpdate then calls SuperJump"},
+ {"id":"ultra","trigger":"diagonal-down dash touches ground","mode":"scale","speed_x":0,"speed_y":0,"x_mult":1.2,"y_mult":0,"var_jump_time":0,"stamina_cost":0,"sfx":"none","source":"Celeste.Player.OnCollideV / DashCoroutine (DodgeSlideSpeedMult)"},
+ {"id":"wall_bounce","trigger":"jump near wall during up dash (dash attacking)","mode":"set","speed_x":170,"speed_y":-160,"x_mult":1,"y_mult":1,"var_jump_time":0.25,"stamina_cost":0,"sfx":"jump_superwall","source":"Celeste.Player.SuperWallJump"},
+ {"id":"wall_jump","trigger":"jump next to wall (not grabbing)","mode":"set","speed_x":130,"speed_y":-105,"x_mult":1,"y_mult":1,"var_jump_time":0.2,"stamina_cost":0,"sfx":"jump_wall","source":"Celeste.Player.WallJump"},
+ {"id":"climb_jump","trigger":"jump while grabbing a wall","mode":"jump","speed_x":40,"speed_y":-105,"x_mult":1,"y_mult":1,"var_jump_time":0.2,"stamina_cost":27.5,"sfx":"jump_climb","source":"Celeste.Player.ClimbJump (Jump + ClimbJumpCost)"}
+]

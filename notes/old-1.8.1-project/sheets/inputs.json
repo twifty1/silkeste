@@ -1,0 +1,10 @@
+[
+ {"id":"move","celeste":"MoveX / MoveY / Aim","silksong_action":"MoveVector","read":"vector, 8-way snapped like Celeste","notes":"keyboard arrows/WASD or stick"},
+ {"id":"jump","celeste":"Jump","silksong_action":"Jump","read":"pressed + held","notes":"0.08 s press buffer like Celeste's Input.Jump"},
+ {"id":"dash","celeste":"Dash","silksong_action":"Attack","read":"pressed","notes":"replaces the left-click / needle attack"},
+ {"id":"skin_switch","celeste":"(none: Celeste picks the skin per chapter)","silksong_action":"key:F2","read":"pressed, anywhere in gameplay (default; changeable: assist.key_skin)","notes":"cycles Madeline / Badeline (sheets/skins.json); saved in %LOCALAPPDATA%/MadelineInPharloom/skin.cfg (user 2026-10-10: anywhere, not only at a bench)"},
+ {"id":"grab","celeste":"Grab","silksong_action":"Dash","read":"held","notes":"Silksong's dash/sprint button becomes Celeste's grab"},
+ {"id":"help","celeste":"(none)","silksong_action":"key:F4","read":"pressed, anywhere in gameplay (default; changeable: assist.key_help)","notes":"shows or hides the help postcard (sheets/postcards.json help) (user 2026-10-10)"},
+ {"id":"assist_menu","celeste":"Pause > Assist Mode","silksong_action":"key:F1","read":"pressed in gameplay; on a controller hold Taunt (R3) for visuals.assist_hold_time (default; changeable: assist.key_settings)","notes":"opens Assist Mode (sheets/assist.json); the game stops while it is open"},
+ {"id":"speedrun_timer","celeste":"Options > Speedrun Clock","silksong_action":"key:F3","read":"pressed, anywhere in gameplay (default; changeable: assist.key_timer)","notes":"shows or hides the speedrun timer; kept in timer.cfg"}
+]

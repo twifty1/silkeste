@@ -1,0 +1,5 @@
+[
+ {"id":"side","entry_gates":"left,right","speed_x":"keep","speed_y":"keep","speed_y_value":0,"state":"keep","var_jump_time":0,"auto_jump":false,"dash_cooldown":0,"refill":true,"source":"Celeste.Player.BeforeSideTransition (nothing) + OnTransition (RefillDash, RefillStamina, wallSlideTimer, jumpGraceTimer = 0, forceMoveXTimer = 0)"},
+ {"id":"down","entry_gates":"top","speed_x":"keep","speed_y":"max0","speed_y_value":0,"state":"normal","var_jump_time":0,"auto_jump":false,"dash_cooldown":0,"refill":true,"source":"Celeste.Player.BeforeDownTransition (State = Normal, Speed.Y = max(0, Speed.Y), AutoJump off, varJumpTimer = 0) + OnTransition"},
+ {"id":"up","entry_gates":"bot","speed_x":"zero","speed_y":"set","speed_y_value":-105,"state":"normal","var_jump_time":0.2,"auto_jump":true,"dash_cooldown":0.2,"refill":true,"source":"Celeste.Player.BeforeUpTransition (Speed.X = 0, Speed.Y = -105, varJumpTimer 0.2, AutoJump, dashCooldownTimer 0.2) + OnTransition"}
+]

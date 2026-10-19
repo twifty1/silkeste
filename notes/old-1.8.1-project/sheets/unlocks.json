@@ -1,0 +1,6 @@
+[
+ {"id":"grab_climb","silksong_unlock":"Cling Grip","player_data":"hasWalljump","gives":"Celeste grab, climb, climb jump and wall jumps (wall bounces too; user 2026-10-12: wall jump comes with climbing)","source":"design (user 2026-10-11: moved from Swift Step, which players may skip since Madeline already dashes)"},
+ {"id":"second_dash","silksong_unlock":"Faydown Cloak","player_data":"hasDoubleJump","gives":"two dashes: pink hair and Celeste's pink dash sounds, like Celeste Chapter 9","source":"design (user 2026-10-10); Celeste.Player.MaxDashes = 2"},
+ {"id":"swift_step","silksong_unlock":"Swift Step","player_data":"hasDash","gives":"a faster, longer dash: the dash lasts 1.25x as long (movement.swift_step_dash_time_mult) and the lock after an enemy hit is 0.3 s instead of 0.4 s (dash_attack.swift_step_hit_cooldown); she dashes from the start without it","source":"design (user 2026-10-11: first nothing and no postcard; later a bonus)"},
+ {"id":"glide","silksong_unlock":"Drifter's Cloak","player_data":"hasBrolly","gives":"Celeste's jellyfish glide: hold Jump while falling or in an updraft; updrafts lift her","source":"design (user 2026-10-11: glide after the Seamstress quest, for airways and bosses)"}
+]

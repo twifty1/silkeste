@@ -1,0 +1,416 @@
+[
+    {
+        "id":  "game_speed",
+        "section":  "Assist Mode",
+        "label":  "Game Speed",
+        "values":  "50%,60%,70%,80%,90%,100%",
+        "default":  "100%",
+        "description":  "Slows the whole game down, enemies and bosses too.",
+        "source":  "Celeste settings menus (restored from the 1.8.1 build)"
+    },
+    {
+        "id":  "infinite_stamina",
+        "section":  "Assist Mode",
+        "label":  "Infinite Stamina",
+        "values":  "Off,On",
+        "default":  "Off",
+        "description":  "Climb and hold onto walls for as long as you like.",
+        "source":  "Celeste settings menus (restored from the 1.8.1 build)"
+    },
+    {
+        "id":  "air_dashes",
+        "section":  "Assist Mode",
+        "label":  "Air Dashes",
+        "values":  "Default,Two,Infinite",
+        "default":  "Default",
+        "description":  "How many times Madeline can dash before landing.",
+        "source":  "Celeste settings menus (restored from the 1.8.1 build)"
+    },
+    {
+        "id":  "dash_assist",
+        "section":  "Assist Mode",
+        "label":  "Dash Assist",
+        "values":  "Off,On",
+        "default":  "Off",
+        "description":  "Time stops while you hold dash, and an arrow shows where you\u0027ll go.",
+        "source":  "Celeste settings menus (restored from the 1.8.1 build)"
+    },
+    {
+        "id":  "invincibility",
+        "section":  "Assist Mode",
+        "label":  "Invincibility",
+        "values":  "Off,On",
+        "default":  "Off",
+        "description":  "Enemies, spikes and hazards can\u0027t hurt you. Bottomless pits still send you back.",
+        "source":  "Celeste settings menus (restored from the 1.8.1 build)"
+    },
+    {
+        "id":  "forgiving_jumps",
+        "section":  "Assist Mode",
+        "label":  "Forgiving Jumps",
+        "values":  "Off,On",
+        "default":  "Off",
+        "description":  "A little longer to jump after leaving a ledge, and presses count a bit earlier.",
+        "source":  "Celeste (user 2026-10-14: more settings)"
+    },
+    {
+        "id":  "jump_count",
+        "section":  "Assist Mode",
+        "label":  "Jump Count",
+        "values":  "1,2,3,Infinite",
+        "default":  "1",
+        "description":  "How many times she can jump before landing again: 1 is normal.",
+        "source":  "Celeste (user 2026-10-14: more settings)"
+    },
+    {
+        "id":  "dash_length",
+        "section":  "Assist Mode",
+        "label":  "Dash Length",
+        "values":  "Short,Normal,Long,Very Long",
+        "default":  "Normal",
+        "description":  "How far each dash goes: Short, Normal, Long or Very Long.",
+        "source":  "Celeste variant Dash Length (user 2026-10-14)"
+    },
+    {
+        "id":  "dash_count",
+        "section":  "Assist Mode",
+        "label":  "Dash Count",
+        "values":  "Default,0,1,2,3,Infinite",
+        "default":  "Default",
+        "description":  "How many dashes she gets before landing. 0 means no dashing at all (and no attacking).",
+        "source":  "Celeste Variant Mode / Silkeste variants (user 2026-10-14)"
+    },
+    {
+        "id":  "mirror_mode",
+        "section":  "Variants",
+        "label":  "Mirror Mode",
+        "values":  "Off,On",
+        "default":  "Off",
+        "description":  "The whole game is shown flipped left to right, and left and right on the controls flip with it.",
+        "source":  "Celeste (user 2026-10-14: more settings)"
+    },
+    {
+        "id":  "low_friction",
+        "section":  "Variants",
+        "label":  "Friction",
+        "values":  "Normal,Low,Very Low,Ice",
+        "default":  "Normal",
+        "description":  "How slippery floors and the air are. Lower slides further, crouching too.",
+        "source":  "Celeste (user 2026-10-14: more settings)"
+    },
+    {
+        "id":  "super_dashing",
+        "section":  "Variants",
+        "label":  "Super Dashing",
+        "values":  "Off,On",
+        "default":  "Off",
+        "description":  "Hold a direction during a dash to steer it as it goes.",
+        "source":  "Celeste (user 2026-10-14: more settings)"
+    },
+    {
+        "id":  "invisible_motion",
+        "section":  "Variants",
+        "label":  "Invisible Motion",
+        "values":  "Off,On",
+        "default":  "Off",
+        "description":  "Madeline vanishes whenever she moves and only shows when she stands still.",
+        "source":  "Celeste (user 2026-10-14: more settings)"
+    },
+    {
+        "id":  "gravity",
+        "section":  "Variants",
+        "label":  "Gravity",
+        "values":  "Low,Normal,High",
+        "default":  "Normal",
+        "description":  "Low makes floaty moon jumps; High makes her fall fast and jumps short and snappy.",
+        "source":  "Celeste Variant Mode / Silkeste variants (user 2026-10-14)"
+    },
+    {
+        "id":  "wind",
+        "section":  "Variants",
+        "label":  "Wind",
+        "values":  "Off,Left,Right,Strong Left,Strong Right",
+        "default":  "Off",
+        "description":  "A constant wind pushes Madeline that way, on the ground and in the air.",
+        "source":  "Celeste Variant Mode / Silkeste variants (user 2026-10-14)"
+    },
+    {
+        "id":  "madeline_speed",
+        "section":  "Variants",
+        "label":  "Madeline Speed",
+        "values":  "Normal,125%,150%",
+        "default":  "Normal",
+        "description":  "Madeline runs, jumps and dashes faster while the rest of the world keeps its speed.",
+        "source":  "Celeste Variant Mode / Silkeste variants (user 2026-10-14)"
+    },
+    {
+        "id":  "bouncy",
+        "section":  "Variants",
+        "label":  "Bouncy",
+        "values":  "Off,On",
+        "default":  "Off",
+        "description":  "Every landing bounces you back up like a spring. Hold down to stick the landing.",
+        "source":  "Celeste Variant Mode / Silkeste variants (user 2026-10-14)"
+    },
+    {
+        "id":  "hiccups",
+        "section":  "Challenges",
+        "label":  "Hiccups",
+        "values":  "Off,On",
+        "default":  "Off",
+        "description":  "Every second or so Madeline hiccups: a big hop and a shove to a random side.",
+        "source":  "Celeste (user 2026-10-14: more settings)"
+    },
+    {
+        "id":  "no_grabbing",
+        "section":  "Challenges",
+        "label":  "No Grabbing",
+        "values":  "Off,On",
+        "default":  "Off",
+        "description":  "Madeline can no longer grab or climb walls.",
+        "source":  "Celeste (user 2026-10-14: more settings)"
+    },
+    {
+        "id":  "no_climb_jump",
+        "section":  "Challenges",
+        "label":  "No Climb Jumping",
+        "values":  "Off,On",
+        "default":  "Off",
+        "description":  "Jumping while holding a wall kicks you away from it instead of climbing up.",
+        "source":  "Celeste Variant Mode / Silkeste variants (user 2026-10-14)"
+    },
+    {
+        "id":  "no_wall_jump",
+        "section":  "Challenges",
+        "label":  "No Wall Jumping",
+        "values":  "Off,On",
+        "default":  "Off",
+        "description":  "You can no longer jump off walls, so every climb has to be done with grabs and dashes.",
+        "source":  "Celeste Variant Mode / Silkeste variants (user 2026-10-14)"
+    },
+    {
+        "id":  "one_hit",
+        "section":  "Challenges",
+        "label":  "One-Hit Mode",
+        "values":  "Off,On",
+        "default":  "Off",
+        "description":  "Any enemy hit kills, like Celeste: you have one heart, and you start again at the entrance of the room you came in by.",
+        "source":  "Celeste Variant Mode / Silkeste variants (user 2026-10-14)"
+    },
+    {
+        "id":  "half_stamina",
+        "section":  "Challenges",
+        "label":  "Half Stamina",
+        "values":  "Off,On",
+        "default":  "Off",
+        "description":  "Madeline can only climb and hold walls for half as long.",
+        "source":  "Silkeste challenges (user 2026-10-14)"
+    },
+    {
+        "id":  "no_wall_slide",
+        "section":  "Challenges",
+        "label":  "No Wall Sliding",
+        "values":  "Off,On",
+        "default":  "Off",
+        "description":  "Holding into a wall no longer slows your fall.",
+        "source":  "Silkeste challenges (user 2026-10-14)"
+    },
+    {
+        "id":  "long_hit_lock",
+        "section":  "Challenges",
+        "label":  "Long Hit Lock",
+        "values":  "Off,On",
+        "default":  "Off",
+        "description":  "After your dash hits an enemy, it stays locked more than twice as long.",
+        "source":  "Silkeste challenges (user 2026-10-14)"
+    },
+    {
+        "id":  "timer",
+        "section":  "Speedrun Timer",
+        "label":  "Show",
+        "values":  "Off,Save,Room,Save + Room,All saves,All saves + Room",
+        "default":  "Save + Room",
+        "description":  "Save: this save\u0027s time. All saves: every save together. Room: the time in this room. The Timer key cycles it too.",
+        "source":  "Celeste settings menus (restored from the 1.8.1 build)"
+    },
+    {
+        "id":  "timer_berries",
+        "section":  "Speedrun Timer",
+        "label":  "Golden Berries",
+        "values":  "On,Off",
+        "default":  "On",
+        "description":  "Show this save\u0027s golden berries next to the timer.",
+        "source":  "Celeste settings menus (restored from the 1.8.1 build)"
+    },
+    {
+        "id":  "look",
+        "section":  "Appearance",
+        "label":  "Look",
+        "values":  "1,2,3,4",
+        "default":  "1",
+        "description":  "Four saved looks: everything below is kept for each. The Switch Skin key cycles them.",
+        "source":  "Celeste settings menus (restored from the 1.8.1 build)"
+    },
+    {
+        "id":  "cat_ears",
+        "section":  "Appearance",
+        "label":  "Cat Ears",
+        "values":  "Off,On",
+        "default":  "Off",
+        "description":  "Cat ears and a tail, in her hair colour. Madeline-shaped skins.",
+        "source":  "Celeste settings menus (restored from the 1.8.1 build)"
+    },
+    {
+        "id":  "skin",
+        "section":  "Appearance",
+        "label":  "Skin",
+        "values":  "Madeline,Badeline,Knight,Pink Cat",
+        "default":  "Madeline",
+        "description":  "Who this look is. Make your own with the rows below.",
+        "source":  "Celeste settings menus (restored from the 1.8.1 build)"
+    },
+    {
+        "id":  "backpack",
+        "section":  "Appearance",
+        "label":  "Backpack",
+        "values":  "On,Off",
+        "default":  "On",
+        "description":  "Off: Madeline without her backpack, as in the Prologue and Farewell.",
+        "source":  "Celeste settings menus (restored from the 1.8.1 build)"
+    },
+    {
+        "id":  "outfit",
+        "section":  "Appearance",
+        "label":  "Outfit",
+        "values":  "Skin default,Madeline,Snowbound,Core,Reflection,Forest,Pharloom,Pink Cat",
+        "default":  "Skin default",
+        "description":  "Her clothes in another skin\u0027s colours. Madeline-shaped skins only (not Badeline or the Knight).",
+        "source":  "Celeste settings menus (restored from the 1.8.1 build)"
+    },
+    {
+        "id":  "hair_two",
+        "section":  "Appearance",
+        "label":  "Hair: 2 Dashes",
+        "values":  "Skin default,Red,Purple,Ghost Blue,Pale Blue,Blue,Pink,PICO Red,PICO Blue,PICO Green,Snow,Orange,Violet,Rust,Ivory,Light Pink,Gold,Blonde,Brown,Black,White,Silver,Green,Mint,Teal,Navy,Lavender,Crimson,Peach",
+        "default":  "Skin default",
+        "description":  "Her hair colour while she has two dashes.",
+        "source":  "Celeste settings menus (restored from the 1.8.1 build)"
+    },
+    {
+        "id":  "hair_one",
+        "section":  "Appearance",
+        "label":  "Hair: 1 Dash",
+        "values":  "Skin default,Red,Purple,Ghost Blue,Pale Blue,Blue,Pink,PICO Red,PICO Blue,PICO Green,Snow,Orange,Violet,Rust,Ivory,Light Pink,Gold,Blonde,Brown,Black,White,Silver,Green,Mint,Teal,Navy,Lavender,Crimson,Peach",
+        "default":  "Skin default",
+        "description":  "Her hair colour while she has one dash.",
+        "source":  "Celeste settings menus (restored from the 1.8.1 build)"
+    },
+    {
+        "id":  "hair_zero",
+        "section":  "Appearance",
+        "label":  "Hair: No Dash",
+        "values":  "Skin default,Red,Purple,Ghost Blue,Pale Blue,Blue,Pink,PICO Red,PICO Blue,PICO Green,Snow,Orange,Violet,Rust,Ivory,Light Pink,Gold,Blonde,Brown,Black,White,Silver,Green,Mint,Teal,Navy,Lavender,Crimson,Peach",
+        "default":  "Skin default",
+        "description":  "Her hair colour with no dash left.",
+        "source":  "Celeste settings menus (restored from the 1.8.1 build)"
+    },
+    {
+        "id":  "hair_length",
+        "section":  "Appearance",
+        "label":  "Hair Length",
+        "values":  "Short,Normal,Long,Very Long",
+        "default":  "Normal",
+        "description":  "How far her hair trails behind her.",
+        "source":  "Celeste settings menus (restored from the 1.8.1 build)"
+    },
+    {
+        "id":  "hair_size",
+        "section":  "Appearance",
+        "label":  "Hair Volume",
+        "values":  "Thin,Normal,Fluffy",
+        "default":  "Normal",
+        "description":  "How thick her hair is.",
+        "source":  "Celeste settings menus (restored from the 1.8.1 build)"
+    },
+    {
+        "id":  "hair_effect",
+        "section":  "Appearance",
+        "label":  "Hair Effect",
+        "values":  "None,Rainbow,Light Tips,Dark Tips",
+        "default":  "None",
+        "description":  "Rainbow cycles colours while she has a dash. Tips fade the end of her hair lighter or darker.",
+        "source":  "Celeste settings menus (restored from the 1.8.1 build)"
+    },
+    {
+        "id":  "dash_trail",
+        "section":  "Appearance",
+        "label":  "Dash Trail",
+        "values":  "Off,On",
+        "default":  "On",
+        "description":  "The afterimages Madeline leaves when she dashes.",
+        "source":  "Celeste (user 2026-10-14: more settings)"
+    },
+    {
+        "id":  "dash_colour_rush",
+        "section":  "Appearance",
+        "label":  "Dash Colour Rush",
+        "values":  "Off,On",
+        "default":  "Off",
+        "description":  "Every dash sends her hair through a burst of rainbow colours.",
+        "source":  "Celeste Variant Mode / Silkeste variants (user 2026-10-14)"
+    },
+    {
+        "id":  "key_skin",
+        "section":  "Controls",
+        "label":  "Next Look",
+        "values":  "F1,F2,F3,F4,F5,F6,F7,F8,F9,F10,F11,F12",
+        "default":  "F2",
+        "description":  "Switches to the next saved look. Two actions can\u0027t share a key.",
+        "source":  "Celeste settings menus (restored from the 1.8.1 build)"
+    },
+    {
+        "id":  "key_help",
+        "section":  "Controls",
+        "label":  "Tutorial",
+        "values":  "F1,F2,F3,F4,F5,F6,F7,F8,F9,F10,F11,F12",
+        "default":  "F4",
+        "description":  "Shows the Tutorial postcard. Two actions can\u0027t share a key.",
+        "source":  "Celeste settings menus (restored from the 1.8.1 build)"
+    },
+    {
+        "id":  "key_settings",
+        "section":  "Controls",
+        "label":  "Settings",
+        "values":  "F1,F2,F3,F4,F5,F6,F7,F8,F9,F10,F11,F12",
+        "default":  "F1",
+        "description":  "Opens this menu (a controller can also hold Taunt). Two actions can\u0027t share a key.",
+        "source":  "Celeste settings menus (restored from the 1.8.1 build)"
+    },
+    {
+        "id":  "key_timer",
+        "section":  "Controls",
+        "label":  "Timer",
+        "values":  "F1,F2,F3,F4,F5,F6,F7,F8,F9,F10,F11,F12",
+        "default":  "F3",
+        "description":  "Cycles what the speedrun timer shows. Two actions can\u0027t share a key.",
+        "source":  "Celeste settings menus (restored from the 1.8.1 build)"
+    },
+    {
+        "id":  "key_records",
+        "section":  "Controls",
+        "label":  "Records",
+        "values":  "F1,F2,F3,F4,F5,F6,F7,F8,F9,F10,F11,F12",
+        "default":  "F5",
+        "description":  "Opens the records: bosses, areas and golden berries, on this save or all saves. Two actions can\u0027t share a key.",
+        "source":  "Celeste settings menus (restored from the 1.8.1 build)"
+    },
+    {
+        "id":  "key_camera",
+        "section":  "Controls",
+        "label":  "Theo\u0027s Camera",
+        "values":  "F1,F2,F3,F4,F5,F6,F7,F8,F9,F10,F11,F12",
+        "default":  "F6",
+        "description":  "Takes a photo without the HUD, saved to Pictures/Silkeste. L3 on a controller too. Two actions can\u0027t share a key.",
+        "source":  "Celeste settings menus (restored from the 1.8.1 build)"
+    }
+]

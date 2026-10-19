@@ -1,0 +1,92 @@
+[
+    {
+        "id":  "forgiving_jumps",
+        "section":  "Assist Mode",
+        "label":  "Forgiving Jumps",
+        "values":  "Off,On",
+        "default":  "Off",
+        "description":  "A little longer to jump after leaving a ledge, and presses count a bit earlier.",
+        "source":  "Celeste (user 2026-10-14: more settings)"
+    },
+    {
+        "id":  "mirror_mode",
+        "section":  "Variants",
+        "label":  "Mirror Mode",
+        "values":  "Off,On",
+        "default":  "Off",
+        "description":  "The whole world flipped left to right, controls too.",
+        "source":  "Celeste (user 2026-10-14: more settings)"
+    },
+    {
+        "id":  "low_friction",
+        "section":  "Variants",
+        "label":  "Low Friction",
+        "values":  "Off,On",
+        "default":  "Off",
+        "description":  "Every floor is slippery ice.",
+        "source":  "Celeste (user 2026-10-14: more settings)"
+    },
+    {
+        "id":  "jump_count",
+        "section":  "Variants",
+        "label":  "Jump Count",
+        "values":  "1,2,3,Infinite",
+        "default":  "1",
+        "description":  "Jumps before landing again.",
+        "source":  "Celeste (user 2026-10-14: more settings)"
+    },
+    {
+        "id":  "super_dashing",
+        "section":  "Variants",
+        "label":  "Super Dashing",
+        "values":  "Off,On",
+        "default":  "Off",
+        "description":  "Steer your dash while it lasts.",
+        "source":  "Celeste (user 2026-10-14: more settings)"
+    },
+    {
+        "id":  "hiccups",
+        "section":  "Variants",
+        "label":  "Hiccups",
+        "values":  "Off,On",
+        "default":  "Off",
+        "description":  "Madeline hops by herself every so often.",
+        "source":  "Celeste (user 2026-10-14: more settings)"
+    },
+    {
+        "id":  "invisible_motion",
+        "section":  "Variants",
+        "label":  "Invisible Motion",
+        "values":  "Off,On",
+        "default":  "Off",
+        "description":  "Madeline vanishes while she moves.",
+        "source":  "Celeste (user 2026-10-14: more settings)"
+    },
+    {
+        "id":  "no_grabbing",
+        "section":  "Variants",
+        "label":  "No Grabbing",
+        "values":  "Off,On",
+        "default":  "Off",
+        "description":  "No grabbing or climbing walls.",
+        "source":  "Celeste (user 2026-10-14: more settings)"
+    },
+    {
+        "id":  "screen_shake",
+        "section":  "Appearance",
+        "label":  "Screen Shake",
+        "values":  "Off,Half,Full",
+        "default":  "Full",
+        "description":  "How much the screen shakes when you dash.",
+        "source":  "Celeste (user 2026-10-14: more settings)"
+    },
+    {
+        "id":  "dash_trail",
+        "section":  "Appearance",
+        "label":  "Dash Trail",
+        "values":  "Off,On",
+        "default":  "On",
+        "description":  "The afterimages Madeline leaves when she dashes.",
+        "source":  "Celeste (user 2026-10-14: more settings)"
+    }
+]

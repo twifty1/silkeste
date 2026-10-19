@@ -1,0 +1,16 @@
+# built files (releases are on Melty)
+build/
+dist/
+**/obj/
+**/bin/
+
+# big screenshots and banners
+notes/shots-2.0/
+notes/banner/
+notes/*.png
+notes/old-1.8.1-project/screenshots/
+notes/old-1.8.1-project/build/
+
+# personal working notes for AI helpers
+CLAUDE.md
+AGENTS.md

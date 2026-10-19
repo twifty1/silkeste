@@ -1,0 +1,14 @@
+﻿[
+ {"id":"prostrate_rise","hornet_clip":"Prostrate Rise","celeste_anim":"wakeUp","when":"getting up off the floor at the start of the game and similar","source":"Hornet clips Prostrate Rise / Prostrate Rise Slow (fsmtemplates bundle)"},
+ {"id":"prostrate","hornet_clip":"Prostrate","celeste_anim":"asleep","when":"lying on the floor","source":"Hornet clip names starting Prostrate"},
+ {"id":"collect","hornet_clip":"Collect","celeste_anim":"pickUp","when":"collecting an item","source":"Hornet clips Collect Stand 1 / 3"},
+ {"id":"get_item","hornet_clip":"Get Item","celeste_anim":"pickUp","when":"collecting an item","source":"Hornet clip Get Item"},
+ {"id":"look_up","hornet_clip":"Look Up","celeste_anim":"lookUp","when":"looking up in a cutscene","source":"Hornet clips Look Up / LookUp"},
+ {"id":"lookup","hornet_clip":"LookUp","celeste_anim":"lookUp","when":"looking up in a cutscene","source":"HeroAnimationController LookUp"},
+ {"id":"roar","hornet_clip":"Roar","celeste_anim":"shaking","when":"bracing against a boss roar","source":"Hornet clip names starting Roar (Roar Lock)"},
+ {"id":"stun","hornet_clip":"Stun","celeste_anim":"shaking","when":"stunned","source":"HeroAnimationController Stun"},
+ {"id":"bound","hornet_clip":"Bound","celeste_anim":"tentacle_grabbed","when":"bound in silk","source":"Hornet clip Bound Sprite / Idle Bound"},
+ {"id":"idle_bound","hornet_clip":"Idle Bound","celeste_anim":"tentacle_grabbed","when":"bound in silk","source":"Hornet clip Idle Bound"},
+ {"id":"needolin","hornet_clip":"Needolin","celeste_anim":"sitDown","when":"playing the Needolin","source":"F3 log 2026-10-11: Hornet clips Needolin Start / StartCancelable / Play / End, control relinquished"},
+ {"id":"curse_bound","hornet_clip":"Curse Bound","celeste_anim":"tentacle_grabbed","when":"bound by the curse","source":"Hornet clips Curse Bound / Curse Bound Idle"}
+]
