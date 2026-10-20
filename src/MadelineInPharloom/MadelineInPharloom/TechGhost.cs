@@ -269,6 +269,7 @@ public partial class MadelineView
 		TechTips.Pinned = TechRoom.Active;   // in the Tech Tutorial the bubble stays at the top of the screen
 		TechTips.NameOverride = null;
 		TechTips.HowOverride = null;
+		TechTips.PipsNeed = 0;
 		int section = TechRoom.SectionLesson(feet.x);   // the tutorial's super and hyper gaps teach their own move
 		int lesson = !TechTips.On ? -1 : section >= 0 ? section : TechRoom.Active ? -1 : TechTips.Current;   // in the tutorial only the gaps use this ghost
 		bool standing = root.activeSelf && !dying && ctrl.Active && ctrl.OnGround && ctrl.Speed.sqrMagnitude < 1f && ctrl.State == 0 && !ctrl.Ducking && emote < 0 && !h.playerData.atBench && !BossRematch.Active && PostcardView.TutorialDone && !h.controlReqlinquished;
@@ -321,7 +322,12 @@ public partial class MadelineView
 		if (show && section >= 0)
 		{
 			bubbleHold = Math.Max(bubbleHold, 8f);   // at a gap the bubble stays up
-			TechTips.HowOverride = TechTips.Lessons[section].How + (section == 0 ? "\nGet across the gap with a super." : "\nUnder the low ceiling a super bumps its head: get across with a hyper.");
+			// the training room's station card: its step, what to do, and the step's pips
+			TechRoom.StationCard(feet.x, out string title, out string how, out int done, out int need);
+			TechTips.NameOverride = title;
+			TechTips.HowOverride = how;
+			TechTips.PipsDone = done;
+			TechTips.PipsNeed = need;
 		}
 		if (show)
 		{

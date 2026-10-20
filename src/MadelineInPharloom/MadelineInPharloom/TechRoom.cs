@@ -29,7 +29,9 @@ public class TechRoom : MonoBehaviour
 
 	private static readonly AccessTools.FieldRef<HeroController, Collider2D> Col = AccessTools.FieldRefAccess<HeroController, Collider2D>("col2d");
 
-	private static readonly string[] Levels = new string[1] { "lvl_f-00" };   // the combo room (f-01) is left out (user 2026-10-20)
+	// user 2026-10-20: the tutorial is the built training room now (simpler for new players); Farewell's room stays
+	// readable here for later (f-00 for an extra challenge)
+	private static readonly string[] Levels = new string[0];
 
 	private static readonly Vector3 Origin = new Vector3(6000f, 6000f, 0f);
 
@@ -171,6 +173,24 @@ public class TechRoom : MonoBehaviour
 	public static bool HoldsControl => Instance != null && Instance.holding;
 
 	private bool waitingToAsk;
+
+	/// <summary>The speedrun timer waits until the tutorial is done or skipped (user 2026-10-20): while the question
+	/// is due or up, during the tutorial and its wipes.</summary>
+	public static bool HoldsTimer
+	{
+		get
+		{
+			if (Instance == null)
+			{
+				return false;
+			}
+			if (Active || Instance.ask != Ask.None || Instance.wipeDir != 0)
+			{
+				return true;
+			}
+			return TechTips.Slot >= 0 && !TechTips.Flag("asked") && !Instance.gaveUp;
+		}
+	}
 
 	/// <summary>No moving or dashing while she's being asked, waiting to be, or a wipe is on (user 2026-10-20).</summary>
 	public static bool InputLocked => Instance != null && (Instance.ask != Ask.None || Instance.wipeDir != 0 || Instance.waitingToAsk);
@@ -393,6 +413,7 @@ public class TechRoom : MonoBehaviour
 
 	private void Cleanup()
 	{
+		EndSlow();
 		Active = false;
 		Playbacks.Clear();
 		Plugin.Controller.InDream = false;
@@ -457,7 +478,7 @@ public class TechRoom : MonoBehaviour
 	{
 		Cleanup();
 		string content = Path.Combine(Plugin.CelesteDir, "Content");
-		TechRoomData.Element map = TechRoomData.ReadMap(Path.Combine(content, "Maps/LostLevels.bin"));
+		TechRoomData.Element map = Levels.Length > 0 ? TechRoomData.ReadMap(Path.Combine(content, "Maps/LostLevels.bin")) : null;
 		Dictionary<char, TechRoomData.Tileset> fgSets = TechRoomData.ReadTilesets(Path.Combine(content, "Graphics/ForegroundTiles.xml"));
 		Dictionary<char, TechRoomData.Tileset> bgSets = TechRoomData.ReadTilesets(Path.Combine(content, "Graphics/BackgroundTiles.xml"));
 		heroZ = h.transform.position.z;
@@ -470,8 +491,11 @@ public class TechRoom : MonoBehaviour
 		}
 		root = new GameObject("SilkesteTechRoom");
 		UnityEngine.Object.DontDestroyOnLoad(root);
-		TechRoomData.Element first = TechRoomData.Level(map, Levels[0]);
-		Vector2 basePx = new Vector2(first.F("x"), first.F("y"));
+		TechRoomData.Element first = Levels.Length > 0 ? TechRoomData.Level(map, Levels[0]) : null;
+		Vector2 basePx = first != null ? new Vector2(first.F("x"), first.F("y")) : Vector2.zero;
+		lastOff = Vector2.zero;
+		lastW = 0f;
+		lastExitY = SecFloor;
 		foreach (string name in Levels)
 		{
 			TechRoomData.Element lv = TechRoomData.Level(map, name);
@@ -639,7 +663,7 @@ public class TechRoom : MonoBehaviour
 		return r;
 	}
 
-	private void TileLayer(char[,] g, Dictionary<char, TechRoomData.Tileset> sets, Vector2 off, int w, int h, float z, int order, string name)
+	private SpriteRenderer TileLayer(char[,] g, Dictionary<char, TechRoomData.Tileset> sets, Vector2 off, int w, int h, float z, int order, string name)
 	{
 		Texture2D tex = new Texture2D(w * 8, h * 8, TextureFormat.RGBA32, mipChain: false) { filterMode = FilterMode.Point, wrapMode = TextureWrapMode.Clamp };
 		Color32[] px = new Color32[w * 8 * h * 8];
@@ -682,12 +706,12 @@ public class TechRoom : MonoBehaviour
 		}
 		if (!any)
 		{
-			return;
+			return null;
 		}
 		tex.SetPixels32(px);
 		tex.Apply(updateMipmaps: false, makeNoLongerReadable: true);
 		Sprite s = Sprite.Create(tex, new Rect(0f, 0f, w * 8, h * 8), new Vector2(0f, 1f), 8f, 0u, SpriteMeshType.FullRect);
-		Renderer("Tiles " + name, s, World(off, 0f, 0f, z), order);
+		return Renderer("Tiles " + name, s, World(off, 0f, 0f, z), order);
 	}
 
 	/// <summary>Solid tiles become box colliders on Silksong's terrain layer, merged into rectangles.</summary>
@@ -1296,6 +1320,7 @@ public class TechRoom : MonoBehaviour
 		}
 		WatchEnemies(b);
 		WatchSections(b);
+		WatchSlow();
 		// start points touched become where she comes back
 		for (int i = 0; i < spawns.Count; i++)
 		{
@@ -1530,21 +1555,57 @@ public class TechRoom : MonoBehaviour
 		practiced.Clear();
 	}
 
-	// ---- the super and hyper gaps (user 2026-10-20: instead of the wall bounce) ------------------------------------
-	// a gap a run-jump can't cross but a super can (96 px; a super goes ~126), then a gap under a low ceiling (24 px
-	// over the floor) down to a lower floor (24 px), 120 px wide: a hyper goes ~164, a super only ~107 under it
-
-	private const float SecW = 760f;
+	// ---- the training room (user 2026-10-20: simpler, longer, step by step; Farewell's room left out) -------------
+	// One long room of Celeste tiles: a start pad, then a station each for the super, the hyper and the wavedash, in
+	// that order. A station teaches its move in steps (the dash alone, then the dash and the jump, then a gap), each
+	// done a few times; a gate before the gap opens once the first two are done. The first two goes at the jump are
+	// helped: the game slows down right after the dash and the Jump button flashes until it's pressed.
+	// Sizes from Madeline's numbers: a super goes ~126 px (gap 96), a hyper under a 24 px ceiling ~164 (gap 120, down
+	// 24 onto a lower floor; a super only ~107 there), a wavedash ~165 from a hop (gap 104).
 
 	private const float SecFloor = 136f;
 
+	private const float SecLowFloor = 160f;
+
+	private const float SecW = 1560f;
+
+	public const float HyperDropPx = 24f;
+
+	private struct Station
+	{
+		public string Id;
+
+		public float From;   // where the station starts (local px)
+
+		public float Edge;   // the gap's near edge
+
+		public float Land;   // the gap's far edge
+
+		public float Floor;   // the floor before the gap
+
+		public float GhostX;
+	}
+
+	private static readonly Station[] Stations = new Station[3]
+	{
+		new Station { Id = "super", From = 160f, Edge = 440f, Land = 536f, Floor = SecFloor, GhostX = 410f },
+		new Station { Id = "hyper", From = 536f, Edge = 900f, Land = 1000f, Floor = SecFloor, GhostX = 876f },   // landing moved in for an easier gap (user 2026-10-20)
+		new Station { Id = "wavedash", From = 1000f, Edge = 1400f, Land = 1504f, Floor = SecLowFloor, GhostX = 1370f }
+	};
+
+	private static readonly int[] StepNeed = new int[3] { 2, 3, 1 };
+
 	private Vector2 secOff;
 
-	private bool secFromA;
+	private readonly int[] step = new int[3];
 
-	private bool secFromB;
+	private readonly int[] stepDone = new int[3];
 
-	private readonly HashSet<string> secDone = new HashSet<string>();
+	private readonly int[] assistLeft = new int[3];
+
+	private readonly bool[] armed = new bool[3];
+
+	private readonly GameObject[] gates = new GameObject[3];
 
 	private void BuildSections(Dictionary<char, TechRoomData.Tileset> fgSets)
 	{
@@ -1556,61 +1617,353 @@ public class TechRoom : MonoBehaviour
 		{
 			for (int x = 0; x < w; x++)
 			{
-				int px = x * 8;
-				int py = y * 8;
-				bool a = px < 200 && py >= SecFloor;
-				bool b = px >= 296 && px < 480 && py >= SecFloor;
-				bool ceiling = px >= 400 && px < 640 && py >= 88 && py < 112;
-				bool c = px >= 600 && py >= SecFloor + 24f;
-				g[x, y] = a || b || ceiling || c ? 'm' : '0';
+				float px = x * 8;
+				float py = y * 8;
+				bool floorHigh = px < 900f && py >= SecFloor && !(px >= 440f && px < 536f);
+				bool hyperCeil = px >= 820f && px < 1060f && py < 112f;   // solid up to the roof: only the low tunnel goes through (user 2026-10-20)
+				bool floorLow = px >= 1000f && py >= SecLowFloor && !(px >= 1400f && px < 1504f);
+				bool roof = py < 16f && px >= 32f;
+				g[x, y] = floorHigh || hyperCeil || floorLow || roof ? 'm' : '0';
 			}
 		}
 		Vector3 tl = World(secOff, 0f, 0f);
 		rooms.Add(new Room { Name = "sections", Bounds = new Rect(tl.x, tl.y - PracticeH / 8f, SecW / 8f, PracticeH / 8f) });
 		TileLayer(g, fgSets, secOff, w, h, -0.02f, 20, "sections");
 		Colliders(g, secOff, w, h);
-		spawns.Add(World(secOff, 40f, SecFloor));
-		spawns.Add(World(secOff, 456f, SecFloor));
-		spawns.Add(World(secOff, SecW - 16f, SecFloor + 24f));
+		// the gates: a column of scifi tiles from the roof (or the low ceiling) down to the floor, before each gap
+		for (int i = 0; i < Stations.Length; i++)
+		{
+			Station s = Stations[i];
+			float top = i == 1 ? 112f : 16f;
+			int gh = (int)((s.Floor - top) / 8f);
+			char[,] gg = new char[1, gh];
+			for (int y = 0; y < gh; y++)
+			{
+				gg[0, y] = 'n';
+			}
+			Vector2 at = secOff + new Vector2(s.Edge - 8f, top);
+			GameObject gate = new GameObject("Gate " + s.Id);
+			gate.transform.SetParent(root.transform, worldPositionStays: false);
+			SpriteRenderer gr = TileLayer(gg, fgSets, at, 1, gh, -0.021f, 21, "gate");
+			if (gr != null)
+			{
+				gr.transform.SetParent(gate.transform, worldPositionStays: true);
+				gr.color = new Color(0.75f, 0.85f, 1f, 1f);
+			}
+			BoxCollider2D bc = Box("GateSolid", World(at, 0f, 0f), 1f, gh);
+			bc.transform.SetParent(gate.transform, worldPositionStays: true);
+			gates[i] = gate;
+			step[i] = 0;
+			stepDone[i] = 0;
+			assistLeft[i] = 2;
+			armed[i] = false;
+		}
+		foreach (float x in new float[4] { 24f, 380f, 560f, 860f })
+		{
+			spawns.Add(World(secOff, x, SecFloor));
+		}
+		foreach (float x in new float[3] { 1040f, 1360f, 1528f })
+		{
+			spawns.Add(World(secOff, x, SecLowFloor));
+		}
 		lastOff = secOff;
 		lastW = SecW;
-		lastExitY = SecFloor + 24f;
-		secDone.Clear();
+		lastExitY = SecLowFloor;
 	}
 
-	public const float HyperDropPx = 24f;
-
-	/// <summary>Where the gap's ghost stands (world, feet): before the edge, so its move lands on the far side.</summary>
+	/// <summary>Where a station's ghost stands (world, feet): before the edge, so its move lands on the far side.</summary>
 	public static Vector3 SectionGhostAt(int lesson)
 	{
 		if (Instance == null)
 		{
 			return Vector3.zero;
 		}
-		return Instance.World(Instance.secOff, lesson == 0 ? 176f : 456f, SecFloor);
+		int i = Array.FindIndex(Stations, (Station s) => s.Id == TechTips.Lessons[lesson].Id);
+		return i < 0 ? Vector3.zero : Instance.World(Instance.secOff, Stations[i].GhostX, Stations[i].Floor);
 	}
 
-	/// <summary>Past the tutorial's start floor (at or after Farewell's wavedash run).</summary>
+	/// <summary>Past the tutorial's start (Farewell's wavedash run, when it is in).</summary>
 	public static bool PastStart(float worldX)
 	{
 		return Active && Playbacks.Count > 0 && worldX >= Playbacks[0].MinX - 1f;
 	}
 
-	/// <summary>The move the gap she's at is for (-1: not at one).</summary>
+	private float LocalX(float worldX)
+	{
+		Room r = rooms.Find((Room q) => q.Name == "sections");
+		return r == null ? -1f : (worldX - r.Bounds.xMin) * 8f;
+	}
+
+	private int StationAt(float worldX)
+	{
+		Room r = rooms.Find((Room q) => q.Name == "sections");
+		if (r == null || worldX < r.Bounds.xMin || worldX > r.Bounds.xMax)
+		{
+			return -1;
+		}
+		float local = LocalX(worldX);
+		for (int i = Stations.Length - 1; i >= 0; i--)
+		{
+			if (local >= Stations[i].From)
+			{
+				return i;
+			}
+		}
+		return -1;
+	}
+
+	/// <summary>The move the station she's at teaches (-1: not at one).</summary>
 	public static int SectionLesson(float worldX)
 	{
 		if (Instance == null || !Active)
 		{
 			return -1;
 		}
-		Room r = Instance.rooms.Find((Room q) => q.Name == "sections");
-		if (r == null || worldX < r.Bounds.xMin || worldX > r.Bounds.xMax)
-		{
-			return -1;
-		}
-		float local = (worldX - r.Bounds.xMin) * 8f;
-		return local < 440f ? 0 : 1;
+		int i = Instance.StationAt(worldX);
+		return i < 0 ? -1 : Array.FindIndex(TechTips.Lessons, (TechTips.Lesson l) => l.Id == Stations[i].Id);
 	}
+
+	/// <summary>The station's card: its step, what to do, and how many of how many are done.</summary>
+	public static void StationCard(float worldX, out string title, out string how, out int done, out int need)
+	{
+		title = "";
+		how = "";
+		done = 0;
+		need = 0;
+		if (Instance == null)
+		{
+			return;
+		}
+		int i = Instance.StationAt(worldX);
+		if (i < 0)
+		{
+			return;
+		}
+		int st = Instance.step[i];
+		string[] names = new string[3] { "Super", "Hyper", "Wavedash" };
+		title = names[i] + (st < 3 ? "  -  step " + (st + 1) + " of 3" : "  -  done!");
+		need = st < 3 ? StepNeed[st] : 0;
+		done = st < 3 ? Instance.stepDone[i] : 0;
+		bool helped = Instance.assistLeft[i] > 0;
+		switch (i * 10 + Math.Min(st, 3))
+		{
+		case 0:
+			how = "Dash sideways along the ground: hold RIGHT and press Dash.";
+			break;
+		case 1:
+			how = "Now dash sideways and press Jump while the dash is still going. That's a super: it keeps the dash's speed." + (helped ? "\nThe game slows down to help you the first times." : "");
+			break;
+		case 2:
+			how = "The gate is open. Super across the gap!";
+			break;
+		case 10:
+			how = "On the ground, hold DOWN and RIGHT together (diagonal) and press Dash. She slides along the floor.";
+			break;
+		case 11:
+			how = "Now do that and press Jump while she's still sliding. That's a hyper: lower and faster than a super." + (helped ? "\nThe game slows down to help you the first times." : "");
+			break;
+		case 12:
+			how = "The gate is open. Hyper across the gap: under the low ceiling a super bumps its head.";
+			break;
+		case 20:
+			how = "Jump, then hold DOWN and RIGHT together (diagonal) and press Dash, straight into the ground.";
+			break;
+		case 21:
+			how = "Now press Jump the moment you land, while still dashing. That's a wavedash, and your dash comes back too!" + (helped ? "\nThe game slows down to help you the first times." : "");
+			break;
+		case 22:
+			how = "The gate is open. Wavedash across the gap!";
+			break;
+		default:
+			how = i < 2 ? "Done! Head right for the next move." : "Done! Head right to the practice room.";
+			break;
+		}
+	}
+
+	private void StepUp(int i, string why)
+	{
+		int st = step[i];
+		if (st >= 3)
+		{
+			return;
+		}
+		stepDone[i]++;
+		if (stepDone[i] < StepNeed[st])
+		{
+			Sfx.Play(Sounds.Refill.Id);
+			TechTips.Note(why + " " + stepDone[i] + "/" + StepNeed[st], good: true);
+			return;
+		}
+		step[i]++;
+		stepDone[i] = 0;
+		TechTips.DoneAt = Time.unscaledTime;
+		TechTips.DoneName = step[i] >= 3 ? new string[3] { "Super", "Hyper", "Wavedash" }[i] + "!" : "Step " + step[i] + " done!";
+		TechTips.DoneOver = TechTips.Head;
+		Sfx.Play(Sounds.FeatherGet.Id);
+		if (step[i] == 2 && gates[i] != null)
+		{
+			// the gate before the gap goes
+			UnityEngine.Object.Destroy(gates[i]);
+			gates[i] = null;
+			Sfx.Play(Sounds.GoldenGet.Id);
+			Particles.Dust(World(secOff, Stations[i].Edge - 4f, Stations[i].Floor - 12f), -MathF.PI / 2f, 12);
+		}
+		Plugin.Log.LogInfo("Tech tutorial: " + Stations[i].Id + " step " + step[i] + " done");
+	}
+
+	private int StationHere()
+	{
+		HeroController h = HeroController.UnsafeInstance;
+		return h == null ? -1 : StationAt(h.transform.position.x);
+	}
+
+	// ---- the moves, as they happen (from TechTips' hooks) -------------------------------------------------------------
+
+	/// <summary>A dash began: 1 sideways on the ground, 2 down-diagonal on the ground, 3 down-diagonal in the air.</summary>
+	public static void OnTrainDash(int kind)
+	{
+		if (Instance == null || !Active)
+		{
+			return;
+		}
+		int i = Instance.StationHere();
+		if (i < 0)
+		{
+			return;
+		}
+		int st = Instance.step[i];
+		if (i == 0 && kind == 1 || i == 1 && kind == 2)
+		{
+			if (st == 0)
+			{
+				Instance.StepUp(i, "Nice dash!");
+			}
+			else if (st == 1)
+			{
+				Instance.Assist(i);
+			}
+		}
+	}
+
+	/// <summary>A down-diagonal air dash touched the ground (the wavedash's landing).</summary>
+	public static void OnTrainLanded()
+	{
+		if (Instance == null || !Active)
+		{
+			return;
+		}
+		int i = Instance.StationHere();
+		if (i != 2)
+		{
+			return;
+		}
+		if (Instance.step[2] == 0)
+		{
+			Instance.StepUp(2, "Nice landing!");
+		}
+		else if (Instance.step[2] == 1)
+		{
+			Instance.Assist(2);
+		}
+	}
+
+	public static void OnTrainTech(string id)
+	{
+		if (Instance == null || !Active)
+		{
+			return;
+		}
+		bool helped = Instance.slowOn;
+		Instance.EndSlow();
+		int i = Instance.StationHere();
+		if (i < 0 || Stations[i].Id != id || Instance.step[i] != 1)
+		{
+			return;
+		}
+		if (helped)
+		{
+			Instance.assistLeft[i] = Math.Max(0, Instance.assistLeft[i] - 1);
+		}
+		Instance.StepUp(i, new string[3] { "Super!", "Hyper!", "Wavedash!" }[i]);
+	}
+
+	public static void OnTrainJump()
+	{
+		Instance?.EndSlow();
+	}
+
+	public static void OnTrainDashEnd()
+	{
+		Instance?.EndSlow();
+	}
+
+	// ---- the slow-motion help: right after the dash, the game slows and the Jump button flashes -------------------
+
+	private bool slowOn;
+
+	private float slowAt;
+
+	private void Assist(int i)
+	{
+		if (assistLeft[i] <= 0 || Time.timeScale < 0.9f)
+		{
+			return;
+		}
+		slowOn = true;
+		slowAt = Time.unscaledTime;
+		Time.timeScale = 0.25f;
+	}
+
+	private void EndSlow()
+	{
+		if (!slowOn)
+		{
+			return;
+		}
+		slowOn = false;
+		if (Math.Abs(Time.timeScale - 0.25f) < 0.01f)
+		{
+			Time.timeScale = 1f;
+		}
+	}
+
+	private void WatchSlow()
+	{
+		GameManager gm = GameManager.SilentInstance;
+		if (slowOn && (!Active || Time.unscaledTime - slowAt > 1.2f || gm == null || gm.isPaused))
+		{
+			EndSlow();
+		}
+	}
+
+	private void DrawJumpNow(GuiArt art, float sw)
+	{
+		if (!slowOn)
+		{
+			return;
+		}
+		float t = Time.unscaledTime - slowAt;
+		float pulse = 1f + 0.12f * Mathf.Sin(t * 14f);
+		string word = "JUMP!";
+		float s = 1.4f * pulse;
+		float w = art.Measure(word) * s;
+		float y = 380f;
+		art.DrawOutlined(word, sw / 2f - w / 2f, y, s, new Color(1f, 0.85f, 0.35f, 1f), Color.black, 4f);
+		string key = TechTips.KeyLabel(dash: false);
+		Sprite pad = TechTipsGui.PadNow ? TechTips.PadGlyph(dash: false) : null;
+		if (pad != null)
+		{
+			TechTipsGui.DrawSpriteAt(pad, new Rect(sw / 2f - 40f, y + art.LineHeight * s + 4f, 80f, 80f), Color.white);
+		}
+		else
+		{
+			float ks = 0.8f;
+			float kw = art.Measure(key) * ks;
+			art.DrawOutlined(key, sw / 2f - kw / 2f, y + art.LineHeight * s + 8f, ks, Color.white, Color.black, 3f);
+		}
+	}
+
+	// ---- the gaps --------------------------------------------------------------------------------------------------
 
 	private void WatchSections(Bounds b)
 	{
@@ -1619,48 +1972,29 @@ public class TechRoom : MonoBehaviour
 		{
 			return;
 		}
-		float local = (b.center.x - r.Bounds.xMin) * 8f;
-		if (local < 200f)
+		float local = LocalX(b.center.x);
+		for (int i = 0; i < Stations.Length; i++)
 		{
-			secFromA = true;
-		}
-		else if (local >= 304f && local < 480f)
-		{
-			if (secFromA)
+			Station s = Stations[i];
+			if (local >= s.From && local < s.Edge)
 			{
-				secFromA = false;
-				Crossed("super");
+				armed[i] = true;
 			}
-			secFromB = true;
+			else if (armed[i] && local >= s.Land + 8f)
+			{
+				armed[i] = false;
+				bool used = TechTips.LastTechId == s.Id && Time.unscaledTime - TechTips.LastTechAt < 2f;
+				string name = new string[3] { "super", "hyper", "wavedash" }[i];
+				if (step[i] == 2)
+				{
+					StepUp(i, "Across!");
+					if (!used)
+					{
+						TechTips.Note("You made it! Next time try it with a " + name + ".", good: true);
+					}
+				}
+			}
 		}
-		else if (local >= 608f && secFromB)
-		{
-			secFromB = false;
-			Crossed("hyper");
-		}
-	}
-
-	private void Crossed(string id)
-	{
-		string name = TechTips.Lessons[Array.FindIndex(TechTips.Lessons, (TechTips.Lesson x) => x.Id == id)].Name;
-		bool used = TechTips.LastTechId == id && Time.unscaledTime - TechTips.LastTechAt < 2f;
-		if (!used)
-		{
-			TechTips.Note("You made it! Now try it with a " + name.ToLowerInvariant() + ".", good: true);
-			return;
-		}
-		if (secDone.Add(id))
-		{
-			TechTips.DoneAt = Time.unscaledTime;
-			TechTips.DoneName = name + "!";
-			TechTips.DoneOver = TechTips.Head;
-			Sfx.Play(Sounds.FeatherGet.Id);
-		}
-		else
-		{
-			Sfx.Play(Sounds.Refill.Id);
-		}
-		TechTips.Note(id == "super" ? "Super! Next: the hyper, under the low ceiling." : "Hyper! On to the practice room.", good: true);
 	}
 
 	private static bool enemyHintOn;
@@ -2058,6 +2392,7 @@ public class TechRoom : MonoBehaviour
 		if (Active && AssistMode.Art != null && wipeDir == 0)
 		{
 			DrawExitSign(AssistMode.Art);
+			DrawJumpNow(AssistMode.Art, sw);
 		}
 		if (ask != Ask.None)
 		{

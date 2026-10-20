@@ -11,7 +11,7 @@
 - **Feels like Celeste:** the title screen, menus and save files look like Celeste's, conversations use Celeste's text boxes, dying plays Celeste's death burst and respawn, and resting at a bench is like sitting by Celeste's campfire.
 
 ### New in 2.2
-- **Tech Tutorial:** new to Celeste's tech? Learn the wavedash, super and hyper in a room built from Celeste's Farewell, with ghosts to copy, your own buttons on screen, and moss crawlers to practise on.
+- **Tech Tutorial:** new to Celeste's tech? Learn the super, hyper and wavedash step by step in a room of Celeste tiles, with slow-motion help, ghosts to copy, your own buttons on screen, and moss crawlers to practise on.
 - **Tech Tips** rebuilt: a ghost shows the next move when you stand still, with a timing bar and hints.
 
 ### Controls

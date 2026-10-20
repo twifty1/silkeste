@@ -205,6 +205,11 @@ public static class TechTips
 	/// <summary>The Tech Tutorial's tests: another name and words for the move's bubble (null: the lesson's own).</summary>
 	public static string NameOverride;
 
+	/// <summary>The training room's step: how many done of how many (need 0: none).</summary>
+	public static int PipsDone;
+
+	public static int PipsNeed;
+
 	public static string HowOverride;
 
 	/// <summary>A short line under the words: how the last try went.</summary>
@@ -430,6 +435,7 @@ public static class TechTips
 				Hint(1, 1);
 			}
 		}
+		TechRoom.OnTrainDash(k == Kind.Side ? 1 : k == Kind.GroundDiag ? 2 : k == Kind.AirDiag ? 3 : 0);
 		dashKind = k;
 		dashAt = Now;
 		dashLen = len;
@@ -443,11 +449,13 @@ public static class TechTips
 		if (dashKind == Kind.AirDiag && landAt < 0f)
 		{
 			landAt = Now;
+			TechRoom.OnTrainLanded();
 		}
 	}
 
 	public static void OnDashEnd()
 	{
+		TechRoom.OnTrainDashEnd();
 		dashEndAt = Now;
 		if (!resolved && dashKind == Kind.AirDiag && landAt < 0f)
 		{
@@ -463,6 +471,7 @@ public static class TechTips
 	/// <summary>A plain jump or wall jump: right after a dash that could have been a move, it was too late.</summary>
 	public static void OnJump()
 	{
+		TechRoom.OnTrainJump();
 		jumpAt = Now;
 		if (resolved || dashEndAt < 0f || Now - dashEndAt > 0.3f)
 		{
@@ -484,6 +493,7 @@ public static class TechTips
 	/// <summary>The move itself, done: counts toward learning it.</summary>
 	public static void OnTech(string id)
 	{
+		TechRoom.OnTrainTech(id);
 		int l = Array.FindIndex(Lessons, (Lesson x) => x.Id == id);
 		if (l < 0)
 		{
@@ -651,6 +661,15 @@ public class TechTipsGui : MonoBehaviour
 	private void Update()
 	{
 		padHints = MenuMouse.PadHints(padHints);
+		PadNow = padHints;
+	}
+
+	/// <summary>The player last used a controller (for button pictures outside this class).</summary>
+	public static bool PadNow;
+
+	public static void DrawSpriteAt(Sprite s, Rect r, Color col)
+	{
+		DrawSprite(s, r, col);
 	}
 
 	private static readonly Color Panel = new Color(0.06f, 0.06f, 0.12f, 1f);
@@ -757,7 +776,9 @@ public class TechTipsGui : MonoBehaviour
 		float nameScale = 0.55f;
 		string title = TechTips.NameOverride ?? (li == -3 ? TechTips.ExtraName : l.Name);
 		float nameW = art.Measure(title) * nameScale;
-		float pipsW = li >= 0 && TechTips.NameOverride == null ? TechTips.Reps * 26f : 0f;
+		int pipTotal = TechTips.PipsNeed > 0 ? TechTips.PipsNeed : li >= 0 && TechTips.NameOverride == null ? TechTips.Reps : 0;
+		int pipFull = TechTips.PipsNeed > 0 ? TechTips.PipsDone : TechTips.Count(li);
+		float pipsW = pipTotal * 26f;
 		float headW = nameW + 24f + pipsW;
 		float inner = Math.Max(rowsW, Math.Max(headW, 560f));
 		float headH = art.LineHeight * nameScale + 6f;
@@ -779,7 +800,7 @@ public class TechTipsGui : MonoBehaviour
 			how.Add("");
 		}
 		float howH = how.Count * art.LineHeight * howScale;
-		float h = 16f + headH + 10f + rowsH + (howH > 0f ? 12f + howH : 0f) + (showBar ? 14f + barH : 0f) + 16f;
+		float h = 16f + headH + 10f + rowsH + (howH > 0f ? 12f + howH : 0f) + (showBar ? 30f + barH : 0f) + 16f;
 		float w0 = inner + 36f;
 		Vector3 sp = cam.WorldToScreenPoint(TechTips.BubbleAt);
 		Vector2 at = new Vector2(sp.x, Screen.height - sp.y) / k;
@@ -807,9 +828,9 @@ public class TechTipsGui : MonoBehaviour
 		float hx = bubble.x + 18f;
 		float hy = bubble.y + 14f;
 		art.DrawOutlined(title, hx, hy, nameScale, A(Color.white, a), A(Color.black, a), 2f);
-		int count = TechTips.Count(li);
+		int count = pipFull;
 		float pipX = bubble.xMax - 18f - pipsW;
-		for (int i = 0; i < (pipsW > 0f ? TechTips.Reps : 0); i++)
+		for (int i = 0; i < pipTotal; i++)
 		{
 			bool full = i < count;
 			float pop = TechTips.RepLesson == li && i == count - 1 ? Mathf.Clamp01(1f - (now - TechTips.RepAt) / 0.35f) : 0f;
@@ -890,7 +911,7 @@ public class TechTipsGui : MonoBehaviour
 		}
 		if (showBar)
 		{
-			DrawBar(new Rect(bubble.x + 18f, ty + 14f, inner, barH), zone, cursor, jump, jumpCol, a * barAlpha);
+			DrawBar(new Rect(bubble.x + 18f, ty + 30f, inner, barH), zone, cursor, jump, jumpCol, a * barAlpha);
 		}
 	}
 
@@ -918,6 +939,13 @@ public class TechTipsGui : MonoBehaviour
 
 	private static void DrawBar(Rect r, float zone, float cursor, float jump, Color jumpCol, float a)
 	{
+		// the try in words, right of the bar title (user 2026-10-20)
+		if (float.IsNaN(cursor) && !float.IsNaN(jump) && AssistMode.Art != null && jumpCol != Gold)
+		{
+			string word = jump < 0f ? "Too early! Dash first, then Jump." : jump > zone ? "Too late! Jump sooner." : "Perfect!";
+			GuiArt art = AssistMode.Art;
+			art.DrawOutlined(word, r.x, r.y - art.LineHeight * 0.4f - 2f, 0.4f, A(jump < 0f || jump > zone ? Bad : Good, a), A(Color.black, a), 1.5f);
+		}
 		// the bar runs from a little before the window to a little after it
 		float pre = Math.Max(0.12f, zone * 0.6f);
 		float post = Math.Max(0.15f, zone * 0.8f);

@@ -231,7 +231,7 @@ public class SpeedrunTimer : MonoBehaviour
 		{
 			modeShown -= Time.unscaledDeltaTime;
 		}
-		if (!text.StartsWith("Cinematic_") && !text.StartsWith("Opening_") && !IsLoading(silentInstance, silentInstance2))
+		if (!text.StartsWith("Cinematic_") && !text.StartsWith("Opening_") && !IsLoading(silentInstance, silentInstance2) && !TechRoom.HoldsTimer)
 		{
 			roomTime += Time.unscaledDeltaTime;
 			fileTime += Time.unscaledDeltaTime;
