@@ -253,6 +253,7 @@ public class CelesteFileSelect : MonoBehaviour
 		{
 			AssistMode.ForgetSlot(__instance.SaveSlotIndex);
 			RunLog.Forget(__instance.SaveSlotIndex);
+			TechTips.ForgetSlot(__instance.SaveSlotIndex);
 			Plugin.Log.LogInfo("File " + __instance.SaveSlotIndex + " deleted: back to Standard");
 		}
 		catch (Exception e)
@@ -574,6 +575,7 @@ public class CelesteFileSelect : MonoBehaviour
 					Plugin.Log.LogInfo("Begin on file " + b.SaveSlotIndex + ": " + b.saveFileState + ", " + b.State + ", mode " + AssistMode.ModeId);
 					if (fresh)
 					{
+						TechTips.ForgetSlot(b.SaveSlotIndex);   // a new file: the Tech Tutorial question and lessons start over
 						StartingAbilities.OpenMenu(start, b.SaveSlotIndex);
 					}
 					else
@@ -1469,7 +1471,7 @@ public class CelesteFileSelect : MonoBehaviour
 			// how the file plays, as badges on the card's top edge (only what isn't Standard / Normal)
 			AssistMode.ProfileOf(button.SaveSlotIndex, out string bm, out string bd);
 			float bx = num6 + num4 - 34f * num5;
-			if (bd != "Normal")
+			if (false && bd != "Normal")
 			{
 				bx = Badge(bd, bd == "Hardcore" ? "C2213A" : (bd == "Hard" ? "D9772B" : (bd == "Story" ? "5BB3E8" : "4CAF50")), bx, num7 - 6f * num5, num5, num);
 			}

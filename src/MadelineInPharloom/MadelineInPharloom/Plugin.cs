@@ -48,6 +48,12 @@ public class Plugin : BaseUnityPlugin
 
 	private static CelesteAssets.Prepared Prebuilt;
 
+	/// <summary>Celeste's Gameplay atlas, once read (the Tech Tutorial's tiles and objects come from it).</summary>
+	internal static CelesteAssets.Prepared Atlas => Prebuilt;
+
+	/// <summary>The player's Celeste folder (null when not found).</summary>
+	internal static string CelesteDir;
+
 	public static bool Ready;
 
 	private static volatile CelesteAssets.Prepared prepared;
@@ -269,6 +275,7 @@ public class Plugin : BaseUnityPlugin
 		}
 		voice = skin.Voice;
 		string celeste = FindCeleste(Path.Combine(text, "settings.cfg"));
+		CelesteDir = celeste;
 		if (celeste == null)
 		{
 			Log.LogError("Celeste not found. Melty sets CelesteDir in " + Path.Combine(text, "settings.cfg") + "; Hornet stays as she is.");
@@ -309,6 +316,8 @@ public class Plugin : BaseUnityPlugin
 			base.gameObject.AddComponent<StartingAbilities>();
 			base.gameObject.AddComponent<CutsceneFx>();
 			base.gameObject.AddComponent<EmoteMenu>();
+			base.gameObject.AddComponent<TechTipsGui>();
+			base.gameObject.AddComponent<TechRoom>();
 			AssistMode.DataDir = (BossCard.DataDir = (SpeedrunTimer.DataDir = text));
 			BossCard.ResetFlag = Path.Combine(Path.GetDirectoryName(base.Info.Location), "reset_records.flag");
 			Assist = base.gameObject.AddComponent<AssistMode>();

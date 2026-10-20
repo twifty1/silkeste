@@ -613,7 +613,7 @@ public class AssistMode : MonoBehaviour
 	public static bool OneHit => Value(AssistOptions.OneHit) == "On";
 
 	/// <summary>Game Modes.difficulty_level: 0 Story, 1 Easy, 2 Normal, 3 Hard, 4 Hardcore.</summary>
-	public static int Difficulty => Index(AssistOptions.Difficulty);
+	public static int Difficulty => 2;   // always Normal: difficulties are gone (user 2026-10-20)
 
 	/// <summary>How much of an enemy's damage Madeline takes.</summary>
 	public static float DamageTaken => (Difficulty == 0) ? 0.25f : ((Difficulty == 1) ? 0.5f : ((Difficulty == 3) ? 1.5f : 1f));
@@ -1572,6 +1572,10 @@ public class AssistMode : MonoBehaviour
 		{
 			fromMenu = true;
 			Instance.Open(null);
+			if (!Instance.open)
+			{
+				fromMenu = false;   // refused (the new-file menu): don't leave it half open
+			}
 		}
 	}
 
@@ -1877,7 +1881,11 @@ public class AssistMode : MonoBehaviour
 	{
 		// user 2026-10-19: Begin in the new-file menu opened Customization while the game loaded. Nothing opens
 		// Settings in the moments after it; the log says what tried, so the cause can be found
-		if (Time.unscaledTime - StartingAbilities.BeganAt < 3f)
+		if (MadelineTouches.DevOn)
+		{
+			Plugin.Log.LogInfo("Settings: opening (asked by " + new System.Diagnostics.StackTrace(1, false).ToString().Replace(Environment.NewLine, " | ") + ")");
+		}
+		if (StartingAbilities.IsOpen || Time.unscaledTime - StartingAbilities.ClosedAt < 0.5f || Time.unscaledTime - StartingAbilities.BeganAt < 3f)
 		{
 			Plugin.Log.LogInfo("Settings: not opened right after a new file began (asked by " + new System.Diagnostics.StackTrace(1, false).ToString().Replace(Environment.NewLine, " | ") + ")");
 			FocusTab = null;
@@ -2234,6 +2242,17 @@ public class AssistMode : MonoBehaviour
 		}
 		if (SilksongOptions.IsButton(assistRow))
 		{
+			if ((flag3 || flag4 || flag5) && assistRow.Id == "techroom_btn")
+			{
+				// the Tech Tutorial: Settings closes, then the wipe (in a game only)
+				if (HeroController.UnsafeInstance != null)
+				{
+					Sfx.Play(Sounds.MenuButtonSelect.Id);
+					Close(HeroController.UnsafeInstance, sound: false);
+					TechRoom.Request();
+				}
+				return;
+			}
 			if ((flag3 || flag4 || flag5) && assistRow.Id == "emotes_btn")
 			{
 				EmoteMenu.Open();   // the Emotes menu opens over Settings (user 2026-10-19)
@@ -2595,7 +2614,7 @@ public class AssistMode : MonoBehaviour
 				Art.DrawOutlined("File " + FocusSlot, side0 + 6f, fy, 0.6f, new Color(1f, 1f, 1f, num4), ink, 2f);
 				fy += (float)Art.LineHeight * 0.6f + 10f;
 			}
-			string[] notes = FocusTab == "Appearance" ? new string[2] { "How Madeline looks.", "Shared by every file." } : new string[3] { "How this file plays.", "Each file keeps its own", "mode and difficulty." };
+			string[] notes = FocusTab == "Appearance" ? new string[2] { "How Madeline looks.", "Shared by every file." } : new string[3] { "How this file plays.", "Each file keeps", "its own mode." };
 			foreach (string note in notes)
 			{
 				Art.DrawOutlined(note, side0 + 6f, fy, 0.4f, new Color(0.78f, 0.78f, 0.84f, num4), ink, 2f);

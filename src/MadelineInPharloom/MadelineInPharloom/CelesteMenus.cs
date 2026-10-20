@@ -706,7 +706,9 @@ public class CelesteMenus : MonoBehaviour
 		{
 			titleSeen = true;
 		}
-		if (!titleSeen && canvasGroup == null && UIManager.instance != null && SceneManager.GetActiveScene().name == "Menu_Title")
+		// on the title scene with no menu up (also on the way back from a game, user 2026-10-20: Silksong's title
+		// showed for a moment after Quit to Menu), the Celeste sky covers it
+		if (canvasGroup == null && UIManager.instance != null && SceneManager.GetActiveScene().name == "Menu_Title")
 		{
 			skyOnly = true;
 		}
@@ -1114,13 +1116,18 @@ public class CelesteMenus : MonoBehaviour
 	}
 
 	// ---- the pause menu's Difficulty (user 2026-10-19): a copy of the Options button between Settings and Quit -----
-	private DifficultyOption difficulty;
 
 	private void EnsureDifficulty()
 	{
+		// the pause menu's Leave Tutorial (user 2026-10-20), in the place the Difficulty row had: only in the tutorial
 		try
 		{
-			if (difficulty != null && difficulty.transform.IsChildOf(screen.transform))
+			if (difficultyRow != null && (!TechRoom.Active || !difficultyRow.transform.IsChildOf(screen.transform)))
+			{
+				UnityEngine.Object.Destroy(difficultyRow.gameObject);
+				difficultyRow = null;
+			}
+			if (!TechRoom.Active || difficultyRow != null)
 			{
 				return;
 			}
@@ -1128,7 +1135,7 @@ public class CelesteMenus : MonoBehaviour
 			Selectable quit = null;
 			foreach (Selectable s in screen.GetComponentsInChildren<Selectable>(includeInactive: false))
 			{
-				if (s is DifficultyOption)
+				if (s is LeaveTutorialOption)
 				{
 					continue;
 				}
@@ -1147,7 +1154,7 @@ public class CelesteMenus : MonoBehaviour
 				return;
 			}
 			GameObject go = UnityEngine.Object.Instantiate(options.gameObject, options.transform.parent);
-			go.name = "SilkesteDifficulty";
+			go.name = "SilkesteLeaveTutorial";
 			go.transform.SetSiblingIndex(options.transform.GetSiblingIndex() + 1);
 			foreach (Component c in go.GetComponentsInChildren<Component>(true))
 			{
@@ -1158,34 +1165,34 @@ public class CelesteMenus : MonoBehaviour
 			}
 			foreach (Text tx in go.GetComponentsInChildren<Text>(true))
 			{
-				tx.text = "Difficulty";
+				tx.text = "Leave Tutorial";
 			}
-			difficulty = go.AddComponent<DifficultyOption>();
-			difficulty.transition = Selectable.Transition.None;
-			// Settings, Difficulty, Quit in that order for up and down
-			Navigation n = difficulty.navigation;
+			difficultyRow = go.AddComponent<LeaveTutorialOption>();
+			difficultyRow.transition = Selectable.Transition.None;
+			Navigation n = difficultyRow.navigation;
 			n.mode = Navigation.Mode.Explicit;
 			n.selectOnUp = options;
 			n.selectOnDown = quit != null ? quit : options;
-			difficulty.navigation = n;
+			difficultyRow.navigation = n;
 			Navigation no = options.navigation;
 			no.mode = Navigation.Mode.Explicit;
-			no.selectOnDown = difficulty;
+			no.selectOnDown = difficultyRow;
 			options.navigation = no;
 			if (quit != null)
 			{
 				Navigation nq = quit.navigation;
 				nq.mode = Navigation.Mode.Explicit;
-				nq.selectOnUp = difficulty;
+				nq.selectOnUp = difficultyRow;
 				quit.navigation = nq;
 			}
-			Plugin.Log.LogInfo("Pause: Difficulty added");
 		}
 		catch (Exception e)
 		{
-			Plugin.Log.LogWarning("Pause difficulty: " + e.Message);
+			Plugin.Log.LogWarning("Pause Leave Tutorial: " + e.Message);
 		}
 	}
+
+	private Selectable difficultyRow;
 
 	// ---- the title's Continue (user 2026-10-17): a copy of Start Game that loads the save played last ----------
 	private Button continueButton;
@@ -1478,7 +1485,7 @@ public class CelesteMenus : MonoBehaviour
 	private float idleAmount;
 
 	// ---- title tips (user 2026-10-17): one line at a time along the bottom, fading from one to the next -----------
-	private static readonly string[] Tips = new string[14]
+	private static readonly string[] Tips = new string[13]
 	{
 		"Dashing through an enemy hits it, and nothing can hit you mid-dash.",
 		"Your dash comes back when you touch the ground.",
@@ -1487,9 +1494,8 @@ public class CelesteMenus : MonoBehaviour
 		"Dash down-diagonal into the ground, then jump, for a wavedash.",
 		"Records keeps every boss you've beaten. Pick one to fight it again.",
 		"Win a boss fight first try, or without healing, for its golden berry.",
-		"Each save keeps its own game mode and difficulty.",
-		"Story difficulty takes a quarter of the damage and hits twice as hard.",
-		"Hardcore: any enemy hit is fatal, but you deal double damage.",
+		"Each save keeps its own game mode.",
+		"One-Hit Mode: any enemy hit is fatal, like in Celeste.",
 		"Theo's camera takes a photo without the HUD. Find it in Records.",
 		"Madeline's hair turns pink while she still has two dashes.",
 		"Postcards explain each new ability. They stay in Records.",
@@ -1743,7 +1749,7 @@ public class CelesteMenus : MonoBehaviour
 		string[] labels = new string[5] { "Mode", "Deaths", "This room", "Time", "Golden berries" };
 		string[] values = new string[5]
 		{
-			modeName + " - " + diffName,
+			modeName,
 			CelesteFileSelect.Deaths(gm.profileID).ToString(),
 			DeathCounter.RoomDeaths.ToString(),
 			BossCard.FormatTime(gm.PlayTime),

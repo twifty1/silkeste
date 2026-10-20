@@ -50,6 +50,8 @@
     <Reference Include="UnityEngine"><HintPath>C:\Program Files (x86)\Steam\steamapps\common\Hollow Knight Silksong\Hollow Knight Silksong_Data\Managed\UnityEngine.dll</HintPath><Private>False</Private></Reference>
     <Reference Include="UnityEngine.InputLegacyModule"><HintPath>C:\Program Files (x86)\Steam\steamapps\common\Hollow Knight Silksong\Hollow Knight Silksong_Data\Managed\UnityEngine.InputLegacyModule.dll</HintPath><Private>False</Private></Reference>
     <Reference Include="netstandard"><HintPath>C:\Program Files (x86)\Steam\steamapps\common\Hollow Knight Silksong\Hollow Knight Silksong_Data\Managed\netstandard.dll</HintPath><Private>False</Private></Reference>
+    <Reference Include="Unity.Addressables"><HintPath>C:\Program Files (x86)\Steam\steamapps\common\Hollow Knight Silksong\Hollow Knight Silksong_Data\Managed\Unity.Addressables.dll</HintPath><Private>False</Private></Reference>
+    <Reference Include="Unity.ResourceManager"><HintPath>C:\Program Files (x86)\Steam\steamapps\common\Hollow Knight Silksong\Hollow Knight Silksong_Data\Managed\Unity.ResourceManager.dll</HintPath><Private>False</Private></Reference>
     <Reference Include="PlayMaker"><HintPath>C:\Program Files (x86)\Steam\steamapps\common\Hollow Knight Silksong\Hollow Knight Silksong_Data\Managed\PlayMaker.dll</HintPath><Private>False</Private></Reference>
   </ItemGroup>
 </Project>

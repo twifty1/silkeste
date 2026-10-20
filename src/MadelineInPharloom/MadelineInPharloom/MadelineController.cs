@@ -346,6 +346,60 @@ public class MadelineController
 
 	public bool DashLocked => hitLockTimer > 0f;
 
+	/// <summary>Inside a Tech Tutorial dream block: a dash into one carries her straight through (user 2026-10-20).</summary>
+	public bool InDream;
+
+	public void DreamTick(bool inside)
+	{
+		if (inside && State == 2)
+		{
+			if (!InDream)
+			{
+				Sfx.Play(Sounds.Refill.Id);
+			}
+			InDream = true;
+			dashTimer = Math.Max(dashTimer, 0.05f);
+			Speed = DashDir.normalized * 240f;
+		}
+		else if (InDream && !inside)
+		{
+			// out the other side like Celeste's DreamDashEnd: full speed kept, dash back, a moment to jump
+			InDream = false;
+			Dashes = MaxDashes;
+			Stamina = 110f;
+			State = 0;
+			Speed = DashDir.normalized * 240f;
+			autoJump = true;
+			autoJumpTimer = 0f;
+			jumpGraceTimer = DashDir.x != 0f ? 0.1f : 0f;
+			dashAttackTimer = 0f;
+		}
+	}
+
+	/// <summary>A Tech Tutorial spring: sets her moving and gives the dash back.</summary>
+	public void Bounce(Vector2 speed)
+	{
+		// Celeste's Player.SideBounce: normal state, auto jump (full height without holding Jump), dash and stamina back
+		State = 0;
+		Ducking = false;
+		Speed = speed;
+		varJumpTimer = 0.2f;
+		varJumpSpeed = speed.y;
+		autoJump = true;
+		autoJumpTimer = 0f;
+		jumpGraceTimer = 0f;
+		dashAttackTimer = 0f;
+		wallSlideTimer = 1.2f;
+		Dashes = MaxDashes;
+		Stamina = 110f;
+		if (speed.x != 0f)
+		{
+			forceMoveX = Math.Sign(speed.x);
+			forceMoveXTimer = 0.3f;
+			Facing = Math.Sign(speed.x);
+		}
+	}
+
 	private bool SuperWallJumpAngleCheck
 	{
 		get
@@ -445,6 +499,18 @@ public class MadelineController
 
 	public static bool Unlocked(UnlockRow row)
 	{
+		// the Tech Tutorial plays like Celeste: climbing on, one dash, no glide or longer dash
+		if (TechRoom.Active)
+		{
+			if (row.Id == Unlocks.GrabClimb.Id)
+			{
+				return true;
+			}
+			if (row.Id == Unlocks.SecondDash.Id || row.Id == Unlocks.Glide.Id || row.Id == Unlocks.SwiftStep.Id)
+			{
+				return false;
+			}
+		}
 		if (!unlockFields.TryGetValue(row.PlayerData, out var value))
 		{
 			value = (unlockFields[row.PlayerData] = AccessTools.FieldRefAccess<PlayerData, bool>(row.PlayerData));
@@ -474,6 +540,16 @@ public class MadelineController
 
 	public void ReadInput(HeroActions a)
 	{
+		if (TechRoom.InputLocked)
+		{
+			// the Tech Tutorial's question is up (or a wipe): she stands still
+			jumpHeld = false;
+			grabHeld = false;
+			moveXInput = 0;
+			moveYInput = 0;
+			aimInput = Vector2.zero;
+			return;
+		}
 		float num = (AssistMode.ForgivingJumps ? 0.16f : 0.08f);
 		if (a.Jump.WasPressed)
 		{
@@ -1077,6 +1153,7 @@ public class MadelineController
 				Speed.x *= Tech.Ultra.XMult;
 				MoveStats.Ultras++;
 				Ducking = true;
+				TechTips.OnDashLanded();
 			}
 			if (State != 1)
 			{
@@ -1517,6 +1594,7 @@ public class MadelineController
 
 	private void Jump(bool playSfx)
 	{
+		TechTips.OnJump();
 		StartJumpCommon(0.2f);
 		Speed.x += 40f * (float)moveX;
 		Speed.y = -105f;
@@ -1581,6 +1659,7 @@ public class MadelineController
 		{
 			MoveStats.Hypers++;
 		}
+		TechTips.OnTech((!Ducking) ? "super" : (airDownDiag ? "wavedash" : "hyper"));
 		StartJumpCommon(techRow.VarJumpTime);
 		Speed.x = techRow.SpeedX * (float)Facing * techRow.XMult;
 		Speed.y = techRow.SpeedY * techRow.YMult;
@@ -1610,6 +1689,7 @@ public class MadelineController
 		if (!AssistMode.NoWallJump)
 		{
 			MoveStats.WallJumps++;
+			TechTips.OnJump();
 			Ducking = false;
 			StartJumpCommon(Tech.WallJump.VarJumpTime);
 			if (moveX != 0)
@@ -1629,6 +1709,7 @@ public class MadelineController
 	private void SuperWallJump(int dir)
 	{
 		MoveStats.WallBounces++;
+		TechTips.OnTech("wallbounce");
 		Ducking = false;
 		StartJumpCommon(Tech.WallBounce.VarJumpTime);
 		Speed.x = Tech.WallBounce.SpeedX * (float)dir;
@@ -1844,6 +1925,10 @@ public class MadelineController
 
 	private bool LedgeBoost(HeroController h)
 	{
+		if (TechRoom.Active)
+		{
+			return false;   // not in Celeste, so not in the Tech Tutorial (user 2026-10-20)
+		}
 		Bounds bounds = Col(h).bounds;
 		float num = 0.125f;
 		float x = ((Facing == 1) ? (bounds.max.x + 2f * num) : (bounds.min.x - 2f * num));
@@ -1995,6 +2080,10 @@ public class MadelineController
 			LastDashTime = Time.time;
 			DashNumber++;
 			airDownDiag = !OnGround && vector.x != 0f && vector.y > 0f;
+			if (!skillDash)
+			{
+				TechTips.OnDash(vector, OnGround, dashTimer, WallJumpCheck(h, 1) || WallJumpCheck(h, -1));
+			}
 			if (DashDir.x != 0f)
 			{
 				Facing = Math.Sign(DashDir.x);
@@ -2030,6 +2119,7 @@ public class MadelineController
 			}
 			if (dashTimer <= 0f)
 			{
+				TechTips.OnDashEnd();
 				autoJump = true;
 				autoJumpTimer = 0f;
 				if (DashDir.y <= 0f || steered)

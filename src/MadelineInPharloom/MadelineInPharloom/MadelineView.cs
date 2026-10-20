@@ -1557,6 +1557,8 @@ public partial class MadelineView
 		UpdateHeadwear(celesteFrame, vector, num2, num4, num3);
 		UpdateCompanion(h, vector, num2, num3, dt);
 		UpdateAuraAndSteps(h, vector, num2, num3, dt);
+		UpdateTechGhost(h, vector, num3, dt);
+		UpdateRoomGhosts(vector, num3, dt);
 		atBenchNow = h.playerData.atBench;
 		UpdateFocus(vector, dt);
 		UpdateKnight(celesteFrame, vector, num2, num4, num3);

@@ -195,9 +195,8 @@ public static class SilksongOptions
 	}
 
 	// ---- folding groups (user 2026-10-17: Customization and Speedrun had too many rows) ------------------------
-	private static readonly string[][] Groups = new string[7][]
+	private static readonly string[][] Groups = new string[6][]
 	{
-		new string[3] { "grp_difficulty", "Difficulty", "difficulty_level" },
 		new string[7] { "grp_start", "Starting Abilities", "start_climb", "start_double_dash", "start_glide", "start_clawline", "start_silk_soar" },
 		new string[8] { "grp_hair", "Hair", "hair_two", "hair_one", "hair_zero", "hair_length", "hair_size", "hair_effect" },
 		new string[6] { "grp_extras", "Accessories", "headwear", "companion", "cat_ears", "backpack" },

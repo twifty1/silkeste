@@ -285,9 +285,9 @@ public class StartingAbilities : MonoBehaviour
 	// the five abilities, then Begin
 	private const int ModeRow = 0;
 
-	private const int DiffRow = 1;
+	private const int DiffRow = -1;   // difficulties are gone (user 2026-10-20)
 
-	private const int FirstAbility = 2;
+	private const int FirstAbility = 1;
 
 	private const int BeginRow = FirstAbility + 5;
 
@@ -342,6 +342,11 @@ public class StartingAbilities : MonoBehaviour
 		}
 		t = Math.Min(1f, t + dt / 0.3f);
 		padHints = MenuMouse.PadHints(padHints);
+		// Silksong's own menu underneath must not take these presses (user 2026-10-20: Customization opened behind)
+		if (UnityEngine.EventSystems.EventSystem.current != null && UnityEngine.EventSystems.EventSystem.current.currentSelectedGameObject != null)
+		{
+			UnityEngine.EventSystems.EventSystem.current.SetSelectedGameObject(null);
+		}
 		if (t < 0.6f)
 		{
 			return;
@@ -375,7 +380,7 @@ public class StartingAbilities : MonoBehaviour
 				if (click)
 				{
 					sel = i;
-					if (i <= DiffRow && arrows[i][0].Contains(p))
+					if (i == ModeRow && arrows[i][0].Contains(p))
 					{
 						left = true;
 					}
@@ -551,7 +556,7 @@ public class StartingAbilities : MonoBehaviour
 			string label = i == ModeRow ? "Game Mode" : (i == DiffRow ? "Difficulty" : All[i - FirstAbility].Row.Label);
 			float textY = y + (rr.height - art.LineHeight * ts) / 2f;
 			art.DrawOutlined(label, rowL + 10f, textY, ts, lab, ink, 2f);
-			if (i <= DiffRow)
+			if (i == ModeRow)
 			{
 				// a selector, as in Settings: [<] value [>] with pips for where it is in the list
 				string[] vals = i == ModeRow ? Array.ConvertAll(Presets.All, (Presets.Preset p) => p.Name) : AssistOptions.Difficulty.Values.Split(',');

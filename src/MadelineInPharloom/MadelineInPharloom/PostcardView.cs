@@ -104,7 +104,7 @@ public class PostcardView : MonoBehaviour
 		}
 		float unscaledDeltaTime = Time.unscaledDeltaTime;
 		bool flag = silentInstance2.GameState == GameState.PLAYING && !silentInstance2.isPaused && !silentInstance.cState.transitioning && !silentInstance.cState.dead && !silentInstance.cState.hazardDeath;
-		bool flag2 = flag && !silentInstance.controlReqlinquished;
+		bool flag2 = flag && (!silentInstance.controlReqlinquished || TechRoom.HoldsControl);
 		controlFor = (flag2 ? (controlFor + unscaledDeltaTime) : 0f);
 		WatchUnlocks(silentInstance2);
 		if (!introShown && flag2 && !silentInstance.playerData.atBench)
@@ -159,6 +159,7 @@ public class PostcardView : MonoBehaviour
 				if (card.Id == Postcards.Intro.Id)
 				{
 					TutorialDone = true;
+					TechRoom.OfferAfterIntro();   // then: do you know Celeste's tech? (user 2026-10-20)
 				}
 				phase = Phase.None;
 				card = default(PostcardRow);
@@ -189,9 +190,9 @@ public class PostcardView : MonoBehaviour
 
 	private void WatchUnlocks(GameManager gm)
 	{
-		if (PlayerData.instance == null)
+		if (PlayerData.instance == null || TechRoom.Active)
 		{
-			return;
+			return;   // the Tech Tutorial lends climbing for a while: no Cling Grip card for that
 		}
 		bool flag = gm.profileID != baselineSlot;
 		if (flag)

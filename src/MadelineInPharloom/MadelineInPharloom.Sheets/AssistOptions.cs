@@ -667,6 +667,27 @@ public static class AssistOptions
 	public static readonly AssistRow[] StartAbilities = new AssistRow[5] { StartClimb, StartDoubleDash, StartGlide, StartClawline, StartSilkSoar };
 
 	// user 2026-10-19: cutscenes lag on slower PCs
+	// user 2026-10-20: players don't know Celeste's tech
+	public static readonly AssistRow TechTips = new AssistRow
+	{
+		Id = "tech_tips",
+		Section = "Game",
+		Label = "Tech Tips",
+		Values = "On,Off",
+		Default = "On",
+		Description = "When Madeline stands still, a ghost Madeline shows the next Celeste technique beside her (super, hyper, wavedash, then the wall bounce) with your buttons and a timing bar. Do it 3 times to learn it. Each save file has its own lessons."
+	};
+
+	public static readonly AssistRow TechRoomButton = new AssistRow
+	{
+		Id = "techroom_btn",
+		Section = "Game",
+		Label = "Tech Tutorial",
+		Values = "Play",
+		Default = "Play",
+		Description = "Plays Celeste's Farewell tutorial room (the wavedash), read from your Celeste, then a super gap, a hyper gap and enemies to practise on, with ghosts to copy. Press it again inside to leave."
+	};
+
 	public static readonly AssistRow LightCutscenes = new AssistRow
 	{
 		Id = "light_cutscenes",
@@ -677,14 +698,14 @@ public static class AssistOptions
 		Description = "Turns off Silksong's heaviest camera effects (the cinematic blur, bloom, lens distortion and grain) while a cutscene plays, so slower PCs keep up. Cutscenes look a little plainer; gameplay is unchanged."
 	};
 
-	public static readonly AssistRow[] All = new AssistRow[62]
+	public static readonly AssistRow[] All = new AssistRow[63]
 	{
 		GameSpeed, InfiniteStamina, DashAssist, Invincibility, ForgivingJumps, JumpCount, DashLength, DashCount, Respawn, MirrorMode,
 		LowFriction, SuperDashing, InvisibleMotion, Gravity, Wind, MadelineSpeed, Bouncy, Hiccups, NoGrabbing, NoClimbJump,
 		NoWallJump, OneHit, HalfStamina, NoWallSlide, LongHitLock, Timer, TimerBerries, AutoSkip, Look, CatEars, Skin,
 		Backpack, Outfit, HairTwo, HairOne, HairZero, HairLength, HairSize, HairEffect, DashTrail, LandingEffects, DashColourRush, HerName,
-		KeySkin, KeySettings, KeyRecords, KeyCamera, KeyEmote, Difficulty, TitleSky, TitleArea,
+		KeySkin, KeySettings, KeyRecords, KeyCamera, KeyEmote, TitleSky, TitleArea,
 		StartClimb, StartDoubleDash, StartGlide, StartClawline, StartSilkSoar, LightCutscenes,
-		Headwear, TrailShape, Companion, Aura, Footprints
+		Headwear, TrailShape, Companion, Aura, Footprints, TechTips, TechRoomButton
 	};
 }

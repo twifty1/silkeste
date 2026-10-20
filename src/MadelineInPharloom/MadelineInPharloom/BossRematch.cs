@@ -915,7 +915,15 @@ public class BossRematch : MonoBehaviour
 		string[] p = cmd.Split(' ');
 		try
 		{
-			if (p[0] == "emotemenu")
+			if (p[0] == "techroom")
+			{
+				TechRoom.Request();   // into (or out of) the Tech Tutorial
+			}
+			else if (p[0] == "techask")
+			{
+				TechRoom.OfferAfterIntro();   // the "do you know Celeste's tech?" prompt
+			}
+			else if (p[0] == "emotemenu")
 			{
 				EmoteMenu.Open();   // a look at the Emotes menu
 			}

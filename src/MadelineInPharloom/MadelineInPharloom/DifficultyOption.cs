@@ -33,3 +33,12 @@ public class DifficultyOption : Selectable, ISubmitHandler
 		Plugin.Log.LogInfo("Pause: difficulty " + AssistMode.ValueOf(AssistOptions.Difficulty));
 	}
 }
+
+/// <summary>The pause menu's Leave Tutorial (user 2026-10-20): asks first, with the moves not learned yet.</summary>
+public class LeaveTutorialOption : Selectable, ISubmitHandler
+{
+	public void OnSubmit(BaseEventData eventData)
+	{
+		TechRoom.AskLeave();
+	}
+}

@@ -28,6 +28,11 @@ public static class Difficulty
 
 	private static bool TakenPrefix(HeroController __instance, ref int damageAmount, GlobalEnums.HazardType hazardType)
 	{
+		if (TechRoom.Active && damageAmount > 0)
+		{
+			TechRoom.Hurt();   // the Tech Tutorial: back to the start point, no masks lost
+			return false;
+		}
 		if (damageAmount <= 0 || hazardType == GlobalEnums.HazardType.PIT || hazardType == GlobalEnums.HazardType.RESPAWN_PIT)
 		{
 			return true;
@@ -55,12 +60,17 @@ public static class Difficulty
 		return true;
 	}
 
-	private static void DealtPrefix(ref HitInstance hitInstance)
+	private static bool DealtPrefix(HealthManager __instance, ref HitInstance hitInstance)
 	{
+		if (TechRoom.IsTutorialEnemy(__instance))
+		{
+			TechRoom.OnEnemyHit(__instance);   // the Tech Tutorial's practice enemies: hits land, they never die
+		}
 		float m = AssistMode.DamageDealt;
 		if (m != 1f && hitInstance.IsHeroDamage && hitInstance.DamageDealt > 0)
 		{
 			hitInstance.DamageDealt = Math.Max(1, Mathf.RoundToInt(hitInstance.DamageDealt * m));
 		}
+		return true;
 	}
 }

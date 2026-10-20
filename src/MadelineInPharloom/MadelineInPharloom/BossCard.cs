@@ -2912,11 +2912,12 @@ public class BossCard : MonoBehaviour
 				MadelineView.Cheer();
 				if (BossRematch.ActOf(defeatField.Name) > 0)
 				{
-					if (AssistMode.Difficulty >= 3)
+					// difficulties are gone (user 2026-10-20): these two are One-Hit Mode's now
+					if (AssistMode.OneHit)
 					{
 						Achievements.Add("hard_knocks");
 					}
-					if (AssistMode.Difficulty == 4 && BossRematch.ActOf(defeatField.Name) == 2)
+					if (AssistMode.OneHit && BossRematch.ActOf(defeatField.Name) == 2)
 					{
 						Achievements.Done("one_shot");
 					}

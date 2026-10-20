@@ -526,6 +526,7 @@ public partial class MadelineView
 	/// <summary>Headwear off while she's gone (dying, hidden); the companion waits where it is.</summary>
 	private void HideLooks()
 	{
+		HideTechGhost();
 		if (headwear != null)
 		{
 			headwear.enabled = false;

@@ -70,8 +70,8 @@ public class Achievements : MonoBehaviour
 		// for this update's features (user 2026-10-17)
 		D("encore", "Encore", "Win a boss rematch from Records.", Tier.Easy, Kind.Combat, 1),
 		D("regular", "Regular", "Win 15 boss rematches.", Tier.Medium, Kind.Combat, 15),
-		D("hard_knocks", "Hard Knocks", "Beat 5 bosses on Hard or Hardcore difficulty.", Tier.Hard, Kind.Combat, 5),
-		D("one_shot", "One Shot", "Beat an Act 2 boss on Hardcore.", Tier.Farewell, Kind.Combat, 1),
+		D("hard_knocks", "Hard Knocks", "Beat 5 bosses in One-Hit Mode.", Tier.Hard, Kind.Combat, 5),
+		D("one_shot", "One Shot", "Beat an Act 2 boss in One-Hit Mode.", Tier.Farewell, Kind.Combat, 1),
 		D("sky_high", "Sky High", "Ride Silk Soar 20 times.", Tier.Easy, Kind.Movement, 20),
 		D("busker", "Busker", "Play the Needolin for 60 seconds in total.", Tier.Easy, Kind.Silly, 60),
 		D("chronicler", "Chronicler", "Fill one save's Run page with 25 moments.", Tier.Medium, Kind.Explore, 25),
