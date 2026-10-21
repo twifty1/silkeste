@@ -1653,6 +1653,17 @@ public partial class MadelineView
 						Achievements.Add("busker");
 					}
 				}
+				if (text.StartsWith("Harpoon", StringComparison.Ordinal))
+				{
+					// the Clawline pull: Celeste's dash, with its afterimages (user 2026-10-21)
+					Play(Animations.Dash.CelesteAnim);
+					if ((harpoonTrail -= Time.deltaTime) <= 0f)
+					{
+						harpoonTrail = 0.06f;
+						SpawnTrail();
+					}
+					return;
+				}
 				if (soarSpin)
 				{
 					Play(Animations.CutFloat.CelesteAnim);   // Celeste's own "spin": Madeline turning left to right
@@ -1888,7 +1899,7 @@ public partial class MadelineView
 		}
 		else if (!ctrl.Active)
 		{
-			hairColor = (ctrl.MaxDashes >= 2) ? TwoDashes : Normal;   // out of her control: the most dashes she has (user 2026-10-19)
+			hairColor = (ctrl.MaxDashes == 2) ? TwoDashes : Normal;   // out of her control: the most dashes she has (user 2026-10-19)
 		}
 		else if (ctrl.Dashes == 0 || ctrl.DashLocked)
 		{
@@ -1896,7 +1907,7 @@ public partial class MadelineView
 		}
 		else
 		{
-			hairColor = ((ctrl.Dashes == 2) ? TwoDashes : Normal);
+			hairColor = ((ctrl.Dashes == 2 && ctrl.MaxDashes == 2) ? TwoDashes : Normal);   // no pink with infinite dashes
 		}
 	}
 
@@ -1981,6 +1992,8 @@ public partial class MadelineView
 			}
 		}
 	}
+
+	private float harpoonTrail;
 
 	private void SpawnTrail()
 	{

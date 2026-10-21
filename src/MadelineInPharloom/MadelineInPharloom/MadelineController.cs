@@ -268,11 +268,7 @@ public class MadelineController
 			{
 				return 3;
 			}
-			if (!Unlocked(Unlocks.SecondDash) && AssistMode.AirDashes != 1)
-			{
-				return 1;
-			}
-			return 2;
+			return 1;   // the Faydown Cloak gives a double jump, not a second dash (user 2026-10-21)
 		}
 	}
 
@@ -345,6 +341,193 @@ public class MadelineController
 	}
 
 	public bool DashLocked => hitLockTimer > 0f;
+
+	// ---- the rebound (user 2026-10-21: an enemy by a wall was unhittable, since the dash stopped inside it and its
+	// touch hurt for sure). A dash that hit an enemy and ends still inside it (stopped by a wall, or just ending there)
+	// knocks her back out, away from it, with a short safe moment. A dash that goes cleanly through is unchanged.
+	private Collider2D reboundFrom;
+
+	private float reboundFor;
+
+	private Collider2D reboundSafe;
+
+	private float reboundSafeFor;
+
+	// the enemy's touch-damage areas: often bigger than the part a dash hits (user 2026-10-21)
+	private readonly List<Collider2D> reboundZones = new List<Collider2D>();
+
+	private void ReboundZones(GameObject enemy, Collider2D hit)
+	{
+		reboundZones.Clear();
+		reboundZones.Add(hit);
+		try
+		{
+			foreach (DamageHero dh in enemy.GetComponentsInChildren<DamageHero>(includeInactive: false))
+			{
+				foreach (Collider2D c in dh.GetComponents<Collider2D>())
+				{
+					if (c != null && c.enabled && !reboundZones.Contains(c))
+					{
+						reboundZones.Add(c);
+					}
+				}
+			}
+		}
+		catch (Exception)
+		{
+		}
+	}
+
+	/// <summary>Is she inside the enemy she hit: the part the dash hit, or any of its touch-damage areas?</summary>
+	private bool InsideRebound(Bounds mine)
+	{
+		foreach (Collider2D c in reboundZones)
+		{
+			if (c == null || !c.enabled || !c.gameObject.activeInHierarchy)
+			{
+				continue;
+			}
+			Bounds b = c.bounds;
+			b.Expand(0.1f);
+			if (mine.Intersects(b))
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private void CheckRebound(HeroController h, float dt)
+	{
+		if (reboundSafe != null)
+		{
+			reboundSafeFor -= dt;
+			Collider2D mc = Col(h);
+			if (reboundSafeFor > 0f && mc != null && InsideRebound(mc.bounds))
+			{
+				SafetyTimer = Math.Max(SafetyTimer, 0.1f);
+			}
+			else
+			{
+				reboundSafe = null;
+			}
+		}
+		if (reboundFrom == null)
+		{
+			return;
+		}
+		reboundFor -= dt;
+		bool dashOver = State != 2 || !DashAttacking || Speed.x == 0f && DashDir.x != 0f;
+		if (reboundFor <= 0f || !reboundFrom.enabled || !reboundFrom.gameObject.activeInHierarchy)
+		{
+			reboundFrom = null;
+			return;
+		}
+		if (!dashOver)
+		{
+			return;
+		}
+		Collider2D me = Col(h);
+		if (me == null)
+		{
+			reboundFrom = null;
+			return;
+		}
+		Bounds mine = me.bounds;
+		Bounds theirs = reboundFrom.bounds;
+		theirs.Expand(0.1f);
+		if (!InsideRebound(mine))
+		{
+			reboundFrom = null;   // out of it already: nothing to do
+			return;
+		}
+		// back the way she came (user 2026-10-21: up into a big boss, a push to the side still left her in it):
+		// an up dash drops her out below, a sideways one goes back sideways, a diagonal both
+		Vector2 back = DashDir.sqrMagnitude > 0.01f ? -DashDir.normalized : new Vector2(Math.Sign(mine.center.x - theirs.center.x), 0f);
+		if (back.x == 0f && back.y == 0f)
+		{
+			back = new Vector2(-Facing, 0f);
+		}
+		float vx = back.x * 150f;
+		float vy;
+		if (back.y > 0.3f)
+		{
+			vy = 200f;   // down, out from under it
+			if (Math.Abs(vx) < 1f)
+			{
+				vx = Math.Sign(mine.center.x - theirs.center.x + 0.001f) * 60f;   // and slide off its edge
+			}
+		}
+		else if (back.y < -0.3f)
+		{
+			vy = -160f;   // up, off its top
+		}
+		else
+		{
+			vy = -110f;   // sideways with a small hop
+		}
+		if (State == 2)
+		{
+			State = 0;
+		}
+		Speed = new Vector2(vx, vy);
+		varJumpTimer = vy < 0f ? 0.1f : 0f;
+		varJumpSpeed = Speed.y;
+		autoJump = vy < 0f;
+		autoJumpTimer = 0f;
+		if (vx != 0f)
+		{
+			forceMoveX = Math.Sign(vx);
+			forceMoveXTimer = 0.15f;
+		}
+		SafetyTimer = Math.Max(SafetyTimer, 0.3f);
+		ScaleX = 1.3f;
+		ScaleY = 0.75f;
+		reboundSafe = reboundFrom;   // safe for as long as she's still inside it (up to 0.6 s)
+		reboundSafeFor = 0.6f;
+		reboundFrom = null;
+		Sfx.PlaySurface("landing", 0.4f);
+	}
+
+	private bool glideArmed;
+
+	/// <summary>Jumps she has in the air: Assist's Jump Count, and one more with the Faydown Cloak.</summary>
+	private int AirJumpsAllowed()
+	{
+		int n = AssistMode.JumpCount < 0 ? 999 : AssistMode.JumpCount - 1;
+		if (Unlocked(Unlocks.SecondDash))
+		{
+			n = Math.Max(n, 1);
+		}
+		return n;
+	}
+
+	/// <summary>Silksong's own Faydown Cloak double jump: its silk wings and sound, plus a puff of Celeste's feathers.</summary>
+	private void DoubleJumpFx(HeroController h)
+	{
+		try
+		{
+			if (h.doubleJumpEffectPrefab != null)
+			{
+				h.doubleJumpEffectPrefab.Spawn(h.transform, Vector3.zero);
+			}
+			AudioSource src = h.GetComponent<AudioSource>();
+			if (src != null && h.doubleJumpClip != null)
+			{
+				src.PlayOneShot(h.doubleJumpClip, 1f);
+			}
+			else
+			{
+				Sfx.Play(Sounds.Jump.Id);
+			}
+			Particles.Feathers(Feet() + new Vector3(0f, 0.6f, 0f), 6, 0.6f);
+		}
+		catch (Exception e)
+		{
+			Plugin.Log.LogWarning("Double jump: " + e.Message);
+			Sfx.Play(Sounds.Jump.Id);
+		}
+	}
 
 	/// <summary>Inside a Tech Tutorial dream block: a dash into one carries her straight through (user 2026-10-20).</summary>
 	public bool InDream;
@@ -670,6 +853,7 @@ public class MadelineController
 		float y = Speed.y;
 		bool onGround = OnGround;
 		ApplyContacts(h);
+		CheckRebound(h, dt);
 		if (AssistMode.Bouncy && !onGround && OnGround && y > 60f && moveYInput != 1 && State != 2)
 		{
 			Speed.y = 0f - Math.Max(y * 0.9f, 105f);
@@ -1000,21 +1184,18 @@ public class MadelineController
 
 	private static float RunBoost(HeroController h)
 	{
+		// Sprintmaster and Quickening: 15% each, 25% at most together (user 2026-10-21)
 		bool isUsingQuickening = h.IsUsingQuickening;
 		bool flag = ToolOn(Gameplay.SprintmasterTool);
-		if (!(isUsingQuickening && flag))
+		if (isUsingQuickening && flag)
 		{
-			if (!isUsingQuickening)
-			{
-				if (!flag)
-				{
-					return 1f;
-				}
-				return 1.33f;
-			}
-			return 1.33f;
+			return 1.25f;
 		}
-		return 1.5f;
+		if (isUsingQuickening || flag)
+		{
+			return 1.15f;
+		}
+		return 1f;
 	}
 
 	public static bool ToolOn(ToolItem tool)
@@ -1430,7 +1611,13 @@ public class MadelineController
 			ScaleY = 0.6f;
 		}
 		bool inUpdraft = h.cState.inUpdraft;
-		bool flag = Unlocked(Unlocks.Glide) && !OnGround && jumpHeld && varJumpTimer <= 0f && (Speed.y >= 0f || inUpdraft);
+		// the glide opens on a new Jump press in the air with no jump left, then stays while it's held (user
+		// 2026-10-21: holding Jump after a jump or the double jump opened it by accident)
+		if (OnGround || !jumpHeld)
+		{
+			glideArmed = false;
+		}
+		bool flag = Unlocked(Unlocks.Glide) && !OnGround && jumpHeld && glideArmed && varJumpTimer <= 0f && (Speed.y >= 0f || inUpdraft);
 		if (flag && !Gliding && this.GlideStarted != null)
 		{
 			this.GlideStarted();
@@ -1554,10 +1741,20 @@ public class MadelineController
 					WallJump(1);
 				}
 			}
-			else if (AssistMode.JumpCount != 1 && (AssistMode.JumpCount < 0 || airJumps < AssistMode.JumpCount - 1))
+			else if (AirJumpsAllowed() <= airJumps)
 			{
+				glideArmed = true;   // a press with no jump left opens the glide
+			}
+			else if (AirJumpsAllowed() > airJumps)
+			{
+				// the Faydown Cloak's double jump (user 2026-10-21), or Assist's Jump Count
+				bool faydown = airJumps == 0 && Unlocked(Unlocks.SecondDash);
 				airJumps++;
-				Jump(playSfx: true);
+				Jump(playSfx: !faydown);
+				if (faydown)
+				{
+					DoubleJumpFx(h);
+				}
 			}
 		}
 		if (AssistMode.Hiccups)
@@ -2021,7 +2218,7 @@ public class MadelineController
 
 	private int StartDash()
 	{
-		wasDashB = Dashes == 2;
+		wasDashB = Dashes == 2 && MaxDashes == 2;
 		Dashes = Math.Max(0, Dashes - 1);
 		dashBuffer = 0f;
 		calledDashEvents = false;
@@ -2303,6 +2500,12 @@ public class MadelineController
 				}
 				if (hitResponse.response == IHitResponder.Response.DamageEnemy && hitResponder is HealthManager)
 				{
+					if (!bouncing)
+					{
+						reboundFrom = collider2D;   // a pogo's bounce already takes her off it
+						reboundFor = 0.4f;
+						ReboundZones(((HealthManager)hitResponder).gameObject, collider2D);
+					}
 					flag = true;
 					Achievements.DashEnemyHits(++enemiesThisDash);
 				}

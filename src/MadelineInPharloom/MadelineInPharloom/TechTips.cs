@@ -53,7 +53,7 @@ public static class TechTips
 		new Lesson { Id = "wallbounce", Name = "Wall Bounce", TimedStep = 1, NeedsWall = true, How = "Right next to a wall, hold UP and dash straight up, then press Jump while still dashing. She bounces off the wall, high and away.", Steps = new Step[2] { new Step { Dir = 2, Dash = true }, new Step { Dir = -1, Jump = true } } }
 	};
 
-	public static bool On => AssistMode.IsOn(AssistOptions.TechTips);
+	public static bool On => true;   // the tips only show in the Tech Tutorial now (user 2026-10-21), so no setting
 
 	// ---- progress, per save file --------------------------------------------------------------------------------
 

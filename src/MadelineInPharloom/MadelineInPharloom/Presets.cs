@@ -26,7 +26,7 @@ public static class Presets
 	{
 		new Preset { Id = "standard", Name = "Standard", Blurb = "Silkeste as it comes: every Assist, Variant, Challenge and Speedrun option back to normal. Your difficulty stays as it is.", Values = "" },
 		new Preset { Id = "speedrun", Name = "Speedrunner", Blurb = "Standard play with the timer on save + room, cutscenes and dialogue skipped, plus the speedometer and the input display.", Values = "timer=Save + Room;timer_berries=On;auto_skip_cutscenes=On;sr_dialogue=Instant;sr_speed=On;sr_inputs=On" },
-		new Preset { Id = "sandbox", Name = "Sandbox", Blurb = "Everything unlocked: every ability, tool, crest and map, full silk, money and every boss rematch, plus endless stamina. Unlocks stay on that save, which becomes an assist save.", Values = "infinite_stamina=On" }
+		new Preset { Id = "sandbox", Name = "Sandbox", Blurb = "Everything unlocked: every ability, tool, crest and map, full silk, money and every boss rematch, plus endless stamina and infinite dashes. Unlocks stay on that save, which becomes an assist save.", Values = "infinite_stamina=On" }
 	};
 
 	/// <summary>The gameplay tabs a preset sets.</summary>
@@ -84,9 +84,30 @@ public static class Presets
 
 	private static bool sandboxPending;
 
+	private static int sandboxRecordsSlot = -1;
+
 	/// <summary>Sandbox unlocks happen in a save: right away, or once the chosen file has loaded.</summary>
 	public static void Tick()
 	{
+		// Sandbox files have all 3 silk hearts and the fully upgraded needle, older ones too (user 2026-10-21)
+		PlayerData spd = PlayerData.instance;
+		if (spd != null && AssistMode.ModeId == "sandbox" && (spd.silkRegenMax < 3 || spd.nailUpgrades < 4) && GameManager.SilentInstance != null && !GameManager.SilentInstance.IsMenuScene())
+		{
+			spd.silkRegenMax = Math.Max(spd.silkRegenMax, 3);
+			spd.HasSeenSilkHearts = true;
+			spd.nailUpgrades = Math.Max(spd.nailUpgrades, 4);
+		}
+		// a Sandbox file's Records list every boss for a rematch, fought or not
+		GameManager sgm = GameManager.SilentInstance;
+		if (spd != null && sgm != null && !sgm.IsMenuScene() && AssistMode.ModeId == "sandbox" && sandboxRecordsSlot != sgm.profileID)
+		{
+			sandboxRecordsSlot = sgm.profileID;
+			BossCard.Instance?.ImportRematches();
+		}
+		else if (sgm == null || sgm.IsMenuScene())
+		{
+			sandboxRecordsSlot = -1;
+		}
 		if (!sandboxPending || PlayerData.instance == null || HeroController.UnsafeInstance == null || GameManager.SilentInstance == null || GameManager.SilentInstance.IsMenuScene())
 		{
 			return;

@@ -15,7 +15,7 @@ public static class Unlocks
 		Id = "second_dash",
 		SilksongUnlock = "Faydown Cloak",
 		PlayerData = "hasDoubleJump",
-		Gives = "two dashes: pink hair and Celeste's pink dash sounds, like Celeste Chapter 9"
+		Gives = "a double jump, with the Faydown Cloak's silk wings"
 	};
 
 	public static readonly UnlockRow SwiftStep = new UnlockRow

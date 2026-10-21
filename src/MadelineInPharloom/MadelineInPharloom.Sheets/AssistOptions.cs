@@ -614,6 +614,17 @@ public static class AssistOptions
 	};
 
 	// starting abilities (user 2026-10-19): per save, picked in the new-file menu with the game mode and difficulty
+	// user 2026-10-21: Sandbox dashes forever by default; its own switch, so it never sits behind Assist's lock
+	public static readonly AssistRow SandboxInfiniteDash = new AssistRow
+	{
+		Id = "sandbox_infinite_dash",
+		Section = "Game",
+		Label = "Sandbox: Infinite Dashes",
+		Values = "On,Off",
+		Default = "On",
+		Description = "Sandbox files only: dash as many times as you like before landing. Off gives the normal single dash."
+	};
+
 	public static readonly AssistRow StartClimb = new AssistRow
 	{
 		Id = "start_climb",
@@ -631,7 +642,7 @@ public static class AssistOptions
 		Label = "Faydown Cloak",
 		Values = "Off,On",
 		Default = "Off",
-		Description = "Start with two dashes and pink hair. Off for the intended experience: the second dash comes with the Faydown Cloak."
+		Description = "Start with the double jump. Off for the intended experience: it comes with the Faydown Cloak."
 	};
 
 	public static readonly AssistRow StartGlide = new AssistRow
@@ -698,14 +709,14 @@ public static class AssistOptions
 		Description = "Turns off Silksong's heaviest camera effects (the cinematic blur, bloom, lens distortion and grain) while a cutscene plays, so slower PCs keep up. Cutscenes look a little plainer; gameplay is unchanged."
 	};
 
-	public static readonly AssistRow[] All = new AssistRow[63]
+	public static readonly AssistRow[] All = new AssistRow[62]
 	{
 		GameSpeed, InfiniteStamina, DashAssist, Invincibility, ForgivingJumps, JumpCount, DashLength, DashCount, Respawn, MirrorMode,
 		LowFriction, SuperDashing, InvisibleMotion, Gravity, Wind, MadelineSpeed, Bouncy, Hiccups, NoGrabbing, NoClimbJump,
 		NoWallJump, OneHit, HalfStamina, NoWallSlide, LongHitLock, Timer, TimerBerries, AutoSkip, Look, CatEars, Skin,
-		Backpack, Outfit, HairTwo, HairOne, HairZero, HairLength, HairSize, HairEffect, DashTrail, LandingEffects, DashColourRush, HerName,
+		Backpack, Outfit, HairOne, HairZero, HairLength, HairSize, HairEffect, DashTrail, LandingEffects, DashColourRush, HerName,
 		KeySkin, KeySettings, KeyRecords, KeyCamera, KeyEmote, TitleSky, TitleArea,
 		StartClimb, StartDoubleDash, StartGlide, StartClawline, StartSilkSoar, LightCutscenes,
-		Headwear, TrailShape, Companion, Aura, Footprints, TechTips, TechRoomButton
+		Headwear, TrailShape, Companion, Aura, Footprints, TechRoomButton, SandboxInfiniteDash
 	};
 }

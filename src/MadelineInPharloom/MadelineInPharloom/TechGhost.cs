@@ -271,7 +271,7 @@ public partial class MadelineView
 		TechTips.HowOverride = null;
 		TechTips.PipsNeed = 0;
 		int section = TechRoom.SectionLesson(feet.x);   // the tutorial's super and hyper gaps teach their own move
-		int lesson = !TechTips.On ? -1 : section >= 0 ? section : TechRoom.Active ? -1 : TechTips.Current;   // in the tutorial only the gaps use this ghost
+		int lesson = section;   // only the tutorial's stations teach (user 2026-10-21: no tips when standing still elsewhere)   // in the tutorial only the gaps use this ghost
 		bool standing = root.activeSelf && !dying && ctrl.Active && ctrl.OnGround && ctrl.Speed.sqrMagnitude < 1f && ctrl.State == 0 && !ctrl.Ducking && emote < 0 && !h.playerData.atBench && !BossRematch.Active && PostcardView.TutorialDone && !h.controlReqlinquished;
 		ghostIdle = standing ? ghostIdle + dt : 0f;
 		if (lesson < 0 || lesson != ghostLesson && ghostLesson >= 0)

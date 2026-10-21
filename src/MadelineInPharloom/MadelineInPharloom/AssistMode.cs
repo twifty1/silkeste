@@ -598,7 +598,9 @@ public class AssistMode : MonoBehaviour
 				}
 				return -1;
 			}
-			return -2;
+			// Sandbox files dash forever unless Game > Sandbox: Infinite Dashes is off (user 2026-10-21); Assist's Dash Count,
+			// when set, wins
+			return ModeId == "sandbox" && Value(AssistOptions.SandboxInfiniteDash) == "On" ? -1 : -2;
 		}
 	}
 

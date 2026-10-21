@@ -1497,7 +1497,7 @@ public class CelesteMenus : MonoBehaviour
 		"Each save keeps its own game mode.",
 		"One-Hit Mode: any enemy hit is fatal, like in Celeste.",
 		"Theo's camera takes a photo without the HUD. Find it in Records.",
-		"Madeline's hair turns pink while she still has two dashes.",
+		"The Faydown Cloak gives Madeline a double jump on silk wings.",
 		"Postcards explain each new ability. They stay in Records.",
 		"Feeling stuck? Assist Mode can slow the game down or give endless stamina."
 	};

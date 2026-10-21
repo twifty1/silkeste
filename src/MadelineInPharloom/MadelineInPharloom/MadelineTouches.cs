@@ -417,6 +417,9 @@ public class MadelineTouches : MonoBehaviour
 		pd.hasNeedolinMemoryPowerup = pd.hasNeedolin = pd.hasChargeSlash = pd.hasNeedleThrow = pd.hasThreadSphere = pd.hasParry = true;
 		pd.hasSilkCharge = pd.hasSilkBomb = pd.hasSilkBossNeedle = pd.hasSilkSpecial = true;
 		pd.UnlockedExtraBlueSlot = pd.UnlockedExtraYellowSlot = true;
+		pd.silkRegenMax = Math.Max(pd.silkRegenMax, 3);   // all 3 silk hearts (user 2026-10-21)
+		pd.HasSeenSilkHearts = true;
+		pd.nailUpgrades = Math.Max(pd.nailUpgrades, 4);   // the fully upgraded needle (user 2026-10-21)
 		foreach (FieldInfo fi in typeof(PlayerData).GetFields(BindingFlags.Instance | BindingFlags.Public))
 		{
 			if (fi.FieldType != typeof(bool))

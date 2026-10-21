@@ -29,7 +29,7 @@ public class StartingAbilities : MonoBehaviour
 	private static readonly Ability[] All = new Ability[5]
 	{
 		new Ability { Row = AssistOptions.StartClimb, Flag = "hasWalljump", Short = "Grab, climb and wall jump" },
-		new Ability { Row = AssistOptions.StartDoubleDash, Flag = "hasDoubleJump", Short = "A second dash" },
+		new Ability { Row = AssistOptions.StartDoubleDash, Flag = "hasDoubleJump", Short = "A double jump" },
 		new Ability { Row = AssistOptions.StartGlide, Flag = "hasBrolly", Short = "The jellyfish glide" },
 		new Ability { Row = AssistOptions.StartClawline, Flag = "hasHarpoonDash", Short = "Grapple with L2 or Q" },
 		new Ability { Row = AssistOptions.StartSilkSoar, Flag = "hasSuperJump", Short = "Down + hold L2 or Q, costs 1 silk" }

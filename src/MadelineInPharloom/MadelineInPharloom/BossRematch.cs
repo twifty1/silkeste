@@ -127,7 +127,21 @@ public class BossRematch : MonoBehaviour
 	}
 
 	/// <summary>F10 (dev): every Act 1 and Act 2 boss on the list can be rematched, beaten or not.</summary>
-	public static bool All;
+	private static bool allThisSession;
+
+	/// <summary>Every boss on the list can be rematched: F10 for this session, and always on a Sandbox file (user
+	/// 2026-10-21: the Sandbox unlock only lasted until the game was restarted).</summary>
+	public static bool All
+	{
+		get
+		{
+			return allThisSession || AssistMode.ModeId == "sandbox";
+		}
+		set
+		{
+			allThisSession = value;
+		}
+	}
 
 	private static string[] Row(string flag)
 	{

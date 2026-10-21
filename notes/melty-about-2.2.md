@@ -12,7 +12,7 @@
 
 ### New in 2.2
 - **Tech Tutorial:** new to Celeste's tech? Learn the super, hyper and wavedash step by step in a room of Celeste tiles, with slow-motion help, ghosts to copy, your own buttons on screen, and moss crawlers to practise on.
-- **Tech Tips** rebuilt: a ghost shows the next move when you stand still, with a timing bar and hints.
+- **A real double jump:** the Faydown Cloak lifts Madeline on its silk wings.
 
 ### Controls
 🎮 **A controller is recommended.** Each line shows controller · keyboard.
@@ -27,7 +27,7 @@
 Everything can be rebound in Settings.
 
 ### Good to know
-- **Climbing** comes with Cling Grip, a **second dash** with the Faydown Cloak, and a **jellyfish glide** with the Drifter's Cloak. You can also start with them.
+- **Climbing** comes with Cling Grip, a **double jump** with the Faydown Cloak, and a **jellyfish glide** with the Drifter's Cloak. You can also start with them.
 - **Don't spam your dash:** a hit locks it for a moment, and her hair turns blue until it's back.
 - **Celeste's Assist Mode, Variants and Challenges** for easier, silly or brutal runs.
 - **Extras:** 32 achievements, a speedrun timer with splits, and Theo's camera (F6).

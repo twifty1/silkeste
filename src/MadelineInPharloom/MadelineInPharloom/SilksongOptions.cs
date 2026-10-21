@@ -198,7 +198,7 @@ public static class SilksongOptions
 	private static readonly string[][] Groups = new string[6][]
 	{
 		new string[7] { "grp_start", "Starting Abilities", "start_climb", "start_double_dash", "start_glide", "start_clawline", "start_silk_soar" },
-		new string[8] { "grp_hair", "Hair", "hair_two", "hair_one", "hair_zero", "hair_length", "hair_size", "hair_effect" },
+		new string[7] { "grp_hair", "Hair", "hair_one", "hair_zero", "hair_length", "hair_size", "hair_effect" },
 		new string[6] { "grp_extras", "Accessories", "headwear", "companion", "cat_ears", "backpack" },
 		new string[8] { "grp_effects", "Effects", "aura", "footprints", "dash_trail", "trail_shape", "landing_effects", "dash_colour_rush" },
 		new string[8] { "grp_splits", "Splits", "sr_splits", "sr_split_list", "sr_compare", "sr_sum_of_best", "sr_attempts", "sr_pace" },
