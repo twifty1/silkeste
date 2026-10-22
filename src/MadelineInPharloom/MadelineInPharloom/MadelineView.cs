@@ -1889,6 +1889,12 @@ public partial class MadelineView
 		{
 			SetColors(colorSkin);
 		}
+		// the flash only counted down while she was in control, so one set during a boss roar, a cutscene or a bind kept
+		// her hair white until control came back (user 2026-10-22)
+		if (!ctrl.Active && ctrl.HairFlashTimer > 0f)
+		{
+			ctrl.HairFlashTimer -= dt;
+		}
 		if (binding)
 		{
 			hairColor = StarFly;
