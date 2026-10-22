@@ -64,7 +64,9 @@ public class MadelineTouches : MonoBehaviour
 		{
 			return true;
 		}
-		bool ground = state == "Bind Ground";
+		// "Binding" is shared by ground and air binds: answer with the one this bind picked (user 2026-10-22: saying "in the
+		// air" there ended every ground bind)
+		bool ground = state == "Bind Ground" || (__instance.Fsm.Variables.GetFsmBool("Was On Ground")?.Value ?? false);
 		if (__instance.StoreResult != null && !__instance.StoreResult.IsNone)
 		{
 			__instance.StoreResult.Value = ground;

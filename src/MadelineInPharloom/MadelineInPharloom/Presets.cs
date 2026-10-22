@@ -92,6 +92,12 @@ public static class Presets
 		// Sandbox files have all 3 silk hearts and the fully upgraded needle, older ones too (user 2026-10-21); not in a
 		// rematch, which has the needle of that point of the game
 		PlayerData spd = PlayerData.instance;
+		// only once the loaded file's own settings are in use: right after switching files the mode is still the old
+		// file's, and a Standard file must never get Sandbox's unlocks (user 2026-10-22)
+		if (GameManager.SilentInstance != null && GameManager.SilentInstance.profileID != AssistMode.ProfileSlot)
+		{
+			spd = null;
+		}
 		if (spd != null && AssistMode.ModeId == "sandbox" && !BossRematch.Active && (spd.silkRegenMax < 3 || spd.nailUpgrades < 4) && GameManager.SilentInstance != null && !GameManager.SilentInstance.IsMenuScene())
 		{
 			spd.silkRegenMax = Math.Max(spd.silkRegenMax, 3);
@@ -112,7 +118,7 @@ public static class Presets
 		// a Sandbox file that never got its unlocks (the mode was already Sandbox when the new file began, so
 		// Apply never ran this session: user 2026-10-22)
 		bool missing = spd != null && AssistMode.ModeId == "sandbox" && !TechRoom.Active && !BossRematch.Active && (!spd.hasSuperJump || !spd.mapAllRooms);
-		if ((!sandboxPending && !missing) || PlayerData.instance == null || HeroController.UnsafeInstance == null || GameManager.SilentInstance == null || GameManager.SilentInstance.IsMenuScene())
+		if ((!sandboxPending && !missing) || spd == null || HeroController.UnsafeInstance == null || GameManager.SilentInstance == null || GameManager.SilentInstance.IsMenuScene())
 		{
 			return;
 		}
