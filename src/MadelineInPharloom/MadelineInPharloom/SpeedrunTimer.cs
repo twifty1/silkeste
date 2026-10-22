@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -231,7 +231,7 @@ public class SpeedrunTimer : MonoBehaviour
 		{
 			modeShown -= Time.unscaledDeltaTime;
 		}
-		if (!text.StartsWith("Cinematic_") && !text.StartsWith("Opening_") && !IsLoading(silentInstance, silentInstance2) && !TechRoom.HoldsTimer)
+		if (!text.StartsWith("Cinematic_") && !text.StartsWith("Opening_") && !IsLoading(silentInstance, silentInstance2) && !TechRoom.HoldsTimer && !BossRematch.Active)   // rematches stay out of the run (user 2026-10-22)
 		{
 			roomTime += Time.unscaledDeltaTime;
 			fileTime += Time.unscaledDeltaTime;

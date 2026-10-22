@@ -2287,7 +2287,25 @@ public class BossCard : MonoBehaviour
 	// the boss list as shown: only bosses with an act; under All they go Act 1, 2, 3 like a timeline (user 2026-10-17)
 	private List<KeyValuePair<string, Record>> BossList()
 	{
-		List<KeyValuePair<string, Record>> list = bossCache.FindAll((KeyValuePair<string, Record> r) => InAct(r.Key));
+		List<KeyValuePair<string, Record>> all = bossCache.FindAll((KeyValuePair<string, Record> r) => InAct(r.Key));
+		// one row per boss (user 2026-10-22: a boss could show twice, once from the journal and once from its defeat
+		// flag): same name, the row with a real record wins over an unfought one
+		List<KeyValuePair<string, Record>> list = new List<KeyValuePair<string, Record>>();
+		Dictionary<string, int> byTitle = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+		foreach (KeyValuePair<string, Record> r in all)
+		{
+			string t = TitleOf(r.Key) ?? r.Key;
+			if (byTitle.TryGetValue(t, out int at))
+			{
+				if (list[at].Value.Time == -1f && r.Value.Time != -1f)
+				{
+					list[at] = r;
+				}
+				continue;
+			}
+			byTitle[t] = list.Count;
+			list.Add(r);
+		}
 		if (actFilter == 0)
 		{
 			list.Sort((KeyValuePair<string, Record> a, KeyValuePair<string, Record> b) => (ActOfKey(a.Key) != ActOfKey(b.Key)) ? ActOfKey(a.Key).CompareTo(ActOfKey(b.Key)) : string.Compare(TitleOf(a.Key), TitleOf(b.Key), StringComparison.OrdinalIgnoreCase));
@@ -2910,6 +2928,10 @@ public class BossCard : MonoBehaviour
 			{
 				Defeated(gm, defeatField.Name);
 				MadelineView.Cheer();
+				if (defeatField.Name == "defeatedMossMother" && !BossRematch.Active)
+				{
+					RecordsHint.Queue();   // the first boss: show where Records is (once per file)
+				}
 				if (BossRematch.ActOf(defeatField.Name) > 0)
 				{
 					// difficulties are gone (user 2026-10-20): these two are One-Hit Mode's now

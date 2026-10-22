@@ -1897,6 +1897,26 @@ public class TechRoom : MonoBehaviour
 		Instance?.EndSlow();
 	}
 
+	// ---- a hit-stop (user 2026-10-22: the Wanderer's hits should feel stronger): the game nearly freezes for a blink
+	public static void HitStop(float secs)
+	{
+		if (Instance != null && Time.timeScale > 0.05f)
+		{
+			Instance.StartCoroutine(Instance.DoHitStop(secs));
+		}
+	}
+
+	private System.Collections.IEnumerator DoHitStop(float secs)
+	{
+		float before = Time.timeScale;
+		Time.timeScale = 0.02f;
+		yield return new WaitForSecondsRealtime(secs);
+		if (Math.Abs(Time.timeScale - 0.02f) < 0.001f)
+		{
+			Time.timeScale = before;
+		}
+	}
+
 	// ---- the slow-motion help: right after the dash, the game slows and the Jump button flashes -------------------
 
 	private bool slowOn;

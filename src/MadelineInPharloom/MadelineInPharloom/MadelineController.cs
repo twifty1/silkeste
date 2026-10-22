@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using GlobalEnums;
@@ -332,7 +332,7 @@ public class MadelineController
 	{
 		get
 		{
-			if (dashBuffer > 0f && dashCooldownTimer <= 0f && hitLockTimer <= 0f)
+			if (dashBuffer > 0f && dashCooldownTimer <= 0f && hitLockTimer <= 0f && !hunterLocked)
 			{
 				return Dashes > 0;
 			}
@@ -340,7 +340,7 @@ public class MadelineController
 		}
 	}
 
-	public bool DashLocked => hitLockTimer > 0f;
+	public bool DashLocked => hitLockTimer > 0f || hunterLocked;
 
 	// ---- the rebound (user 2026-10-21: an enemy by a wall was unhittable, since the dash stopped inside it and its
 	// touch hurt for sure). A dash that hit an enemy and ends still inside it (stopped by a wall, or just ending there)
@@ -348,6 +348,158 @@ public class MadelineController
 	private Collider2D reboundFrom;
 
 	private float reboundFor;
+
+	// ---- crests (user 2026-10-22) -------------------------------------------------------------------------------------
+	/// <summary>The bounce style: a shorter dash that always bounces off what it hits. The default, on every crest but
+	/// the Wanderer (user 2026-10-22: the Hunter and Wanderer effects swapped places).</summary>
+	private static bool Wanderer => PlayerData.instance != null && PlayerData.instance.CurrentCrestID != "Wanderer";
+
+	private bool wandererRefillReady = true;
+
+	// the Hunter crest (user 2026-10-22): hitting an enemy (bosses too) gives the dash back, so a second dash can
+	// follow; after that the refill returns 1 s after she next touches the ground
+	// the refill style, on the Wanderer crest only (user 2026-10-22)
+	private static bool Hunter => PlayerData.instance != null && PlayerData.instance.CurrentCrestID == "Wanderer";
+
+	private static float crestCheckAt;
+
+	/// <summary>Every save has the Wanderer crest from the start, so both dash styles can be swapped at a bench
+	/// (user 2026-10-22).</summary>
+	public static void EnsureWandererCrest()
+	{
+		if (Time.unscaledTime < crestCheckAt || PlayerData.instance == null || HeroController.UnsafeInstance == null)
+		{
+			return;
+		}
+		crestCheckAt = Time.unscaledTime + 2f;
+		try
+		{
+			ToolCrest crest = ToolItemManager.GetCrestByName("Wanderer");
+			if (crest != null && !crest.IsUnlocked)
+			{
+				crest.Unlock();
+				Plugin.Log.LogInfo("Crests: Wanderer unlocked on this save");
+			}
+		}
+		catch (Exception e)
+		{
+			Plugin.Log.LogWarning("Crests: " + e.Message);
+		}
+	}
+
+	private bool hunterRefillReady = true;
+
+	private bool hunterWaitGround;
+
+	private float hunterLandedAt = -10f;
+
+	private void HunterRefill()
+	{
+		if (!hunterRefillReady)
+		{
+			return;
+		}
+		hunterRefillReady = false;
+		hunterWaitGround = true;
+		wandererChainHit = true;   // this hit skips the hit lock (the flag is shared with the Wanderer's refill)
+		dashCooldownTimer = 0f;    // and the second dash can go (and hit) right away (user 2026-10-22)
+		Dashes = MaxDashes;
+		HairFlashTimer = 0.12f;
+		Sfx.Play(Sounds.Refill.Id, 0.6f);
+		hunterSecondPending = true;   // the next dash, whenever it comes, is the second one
+	}
+
+	// after the Hunter's second dash: no dashing for 1.5 s from when that dash is over (user 2026-10-22)
+	private bool hunterLocked;
+
+	private bool hunterLockWaitGround;
+
+	private float hunterLockTimer;
+
+	// user 2026-10-22: a time window let a long wavedash or hyper slip past the lockout, so it's just "the next dash"
+	private bool hunterSecondPending;
+
+	private void HunterRecharge(float dt)
+	{
+		if (hunterLocked)
+		{
+			if (hunterLockWaitGround)
+			{
+				// user 2026-10-22: 1.5 s from when the second dash (and its hit) is over, wherever she is
+				if (State != 2)
+				{
+					hunterLockWaitGround = false;
+					hunterLockTimer = 1.5f;
+				}
+			}
+			else if ((hunterLockTimer -= dt) <= 0f)
+			{
+				hunterLocked = false;
+			}
+		}
+		if (hunterRefillReady)
+		{
+			return;
+		}
+		if (hunterWaitGround && OnGround)
+		{
+			hunterWaitGround = false;
+			hunterLandedAt = Time.time;
+		}
+		else if (!hunterWaitGround && Time.time - hunterLandedAt >= 1f)
+		{
+			hunterRefillReady = true;
+		}
+	}
+
+	private bool wandererChainHit;
+
+	private bool wandererChainDash;
+
+	// standing under a boss and dashing straight up over and over (user 2026-10-22): a hit from an upward dash that
+	// left the ground locks twice as long and gives no Wanderer refill. The Hunter has its own lockout.
+	private bool GroundPoke => dashStartedOnGround && DashDir.y < -0.3f && !Hunter;
+
+	private void WandererBounce()
+	{
+		if (MadelineTouches.DevOn)
+		{
+			Plugin.Log.LogInfo("Crest: Wanderer bounce (crest " + PlayerData.instance.CurrentCrestID + ")");
+		}
+		Vector2 back = DashDir.sqrMagnitude > 0.01f ? -DashDir.normalized : new Vector2(-Facing, 0f);
+		// a small knock back, not a big bounce (user 2026-10-22: chain dashes, the bounce was too bouncy)
+		float vx = back.x * 90f;
+		float vy = back.y > 0.3f ? 80f : back.y < -0.3f ? -100f : -70f;   // down off what's above, up off what's below, a hop sideways
+		// one dash back per trip through the air: a hit refills it, then she has to touch the ground for the next
+		if (wandererRefillReady && !OnGround && !GroundPoke)   // in the air only: on the ground the hit lock stays
+		{
+			wandererRefillReady = false;
+			wandererChainHit = true;
+			Dashes = MaxDashes;
+			HairFlashTimer = 0.12f;
+			Sfx.Play(Sounds.Refill.Id, 0.6f);
+		}
+		State = 0;
+		Speed = new Vector2(vx, vy);
+		varJumpTimer = vy < 0f ? 0.06f : 0f;
+		varJumpSpeed = Speed.y;
+		autoJump = vy < 0f;
+		autoJumpTimer = 0f;
+		dashAttackTimer = 0f;
+		if (vx != 0f)
+		{
+			forceMoveX = Math.Sign(vx);
+			forceMoveXTimer = 0.08f;
+		}
+		SafetyTimer = Math.Max(SafetyTimer, 0.25f);
+		reboundFrom = null;
+		ScaleX = 1.3f;
+		ScaleY = 0.75f;
+		Sfx.Play(Sounds.Jump.Id, 0.8f);
+		// weight: a dust burst where she struck, and a short freeze on impact like Celeste's
+		Particles.Dust(Center() + new Vector3(-back.x, back.y, 0f) * 0.5f, Mathf.Atan2(back.y, back.x), 8);   // back is y-down; the world is y-up
+		TechRoom.HitStop(wandererChainDash ? 0.07f : 0.045f);
+	}
 
 	private Collider2D reboundSafe;
 
@@ -441,52 +593,16 @@ public class MadelineController
 			reboundFrom = null;   // out of it already: nothing to do
 			return;
 		}
-		// back the way she came (user 2026-10-21: up into a big boss, a push to the side still left her in it):
-		// an up dash drops her out below, a sideways one goes back sideways, a diagonal both
-		Vector2 back = DashDir.sqrMagnitude > 0.01f ? -DashDir.normalized : new Vector2(Math.Sign(mine.center.x - theirs.center.x), 0f);
-		if (back.x == 0f && back.y == 0f)
+		if (MadelineTouches.DevOn)
 		{
-			back = new Vector2(-Facing, 0f);
+			Plugin.Log.LogInfo("Still inside " + reboundFrom.name + " after a hit: safe while inside (crest " + (PlayerData.instance != null ? PlayerData.instance.CurrentCrestID : "?") + ")");
 		}
-		float vx = back.x * 150f;
-		float vy;
-		if (back.y > 0.3f)
-		{
-			vy = 200f;   // down, out from under it
-			if (Math.Abs(vx) < 1f)
-			{
-				vx = Math.Sign(mine.center.x - theirs.center.x + 0.001f) * 60f;   // and slide off its edge
-			}
-		}
-		else if (back.y < -0.3f)
-		{
-			vy = -160f;   // up, off its top
-		}
-		else
-		{
-			vy = -110f;   // sideways with a small hop
-		}
-		if (State == 2)
-		{
-			State = 0;
-		}
-		Speed = new Vector2(vx, vy);
-		varJumpTimer = vy < 0f ? 0.1f : 0f;
-		varJumpSpeed = Speed.y;
-		autoJump = vy < 0f;
-		autoJumpTimer = 0f;
-		if (vx != 0f)
-		{
-			forceMoveX = Math.Sign(vx);
-			forceMoveXTimer = 0.15f;
-		}
-		SafetyTimer = Math.Max(SafetyTimer, 0.3f);
-		ScaleX = 1.3f;
-		ScaleY = 0.75f;
-		reboundSafe = reboundFrom;   // safe for as long as she's still inside it (up to 0.6 s)
+		// no push (user 2026-10-22: it bounced only sometimes, so it felt random); only the Wanderer bounces, on every
+		// hit. Every crest stays safe while still inside what it hit, so an enemy by a wall isn't a sure hit
+		reboundSafe = reboundFrom;
 		reboundSafeFor = 0.6f;
+		SafetyTimer = Math.Max(SafetyTimer, 0.1f);
 		reboundFrom = null;
-		Sfx.PlaySurface("landing", 0.4f);
 	}
 
 	private bool glideArmed;
@@ -854,6 +970,7 @@ public class MadelineController
 		bool onGround = OnGround;
 		ApplyContacts(h);
 		CheckRebound(h, dt);
+		HunterRecharge(dt);
 		if (AssistMode.Bouncy && !onGround && OnGround && y > 60f && moveYInput != 1 && State != 2)
 		{
 			Speed.y = 0f - Math.Max(y * 0.9f, 105f);
@@ -1284,6 +1401,7 @@ public class MadelineController
 					AttackType = AttackTypes.Nail,
 					NailElement = NailElements.None,
 					DamageDealt = Damage(hitResponder),
+					IsUsingNeedleDamageMult = true,
 					StunDamage = 1f,
 					Direction = 270f,
 					MagnitudeMultiplier = 0f,
@@ -1458,6 +1576,7 @@ public class MadelineController
 		{
 			jumpGraceTimer = 0.1f * (AssistMode.ForgivingJumps ? 2f : 1f);
 			airJumps = 0;
+			wandererRefillReady = true;
 		}
 		else if (jumpGraceTimer > 0f)
 		{
@@ -2223,6 +2342,13 @@ public class MadelineController
 		dashBuffer = 0f;
 		calledDashEvents = false;
 		dashStartedOnGround = OnGround;
+		if (hunterSecondPending)
+		{
+			hunterSecondPending = false;
+			hunterLocked = true;   // this is the Hunter's second dash: no dashing for 1.5 s once it's over
+			hunterLockWaitGround = true;
+		}
+		wandererChainDash = Wanderer && !OnGround && !wandererRefillReady;   // the dash the air refill gave back
 		dashCooldownTimer = 0.2f;
 		dashRefillCooldownTimer = 0.1f;
 		wallSlideTimer = 1.2f;
@@ -2258,9 +2384,9 @@ public class MadelineController
 		if (dashPhase == 0)
 		{
 			dashPhase = 1;
-			dashTimer = 0.15f * (Unlocked(Unlocks.SwiftStep) ? 1.25f : 1f) * LongclawMult() * AssistMode.DashLength;
+			dashTimer = 0.15f * (Unlocked(Unlocks.SwiftStep) ? 1.25f : 1f) * LongclawMult() * AssistMode.DashLength * (Wanderer ? 0.7f : 1f);   // Wanderer: a shorter, snappier dash
 			Vector2 vector = CorrectDashPrecision((skillDash && skillDir != Vector2.zero) ? skillDir : lastAim);
-			Vector2 speed = vector * 240f * 0.9f;
+			Vector2 speed = vector * 240f * 0.9f * (Wanderer ? 1.15f : 1f);   // Wanderer: faster and shorter, a snappier dash
 			if (skillDash)
 			{
 				dashTimer *= skillTimeMult;
@@ -2473,7 +2599,8 @@ public class MadelineController
 					IsFirstHit = true,
 					AttackType = AttackTypes.Nail,
 					NailElement = NailElements.None,
-					DamageDealt = (bouncing ? BounceDamage((HealthManager)hitResponder) : Damage(hitResponder)),
+					DamageDealt = (bouncing ? BounceDamage((HealthManager)hitResponder) : Damage(hitResponder)),   // (the Wanderer's +30% chain damage is gone, user 2026-10-22)
+					IsUsingNeedleDamageMult = !bouncing,   // each enemy's own needle-level damage modifiers, as for Hornet's needle
 					StunDamage = 1f,
 					Direction = num2,
 					MagnitudeMultiplier = 0f,
@@ -2500,7 +2627,15 @@ public class MadelineController
 				}
 				if (hitResponse.response == IHitResponder.Response.DamageEnemy && hitResponder is HealthManager)
 				{
-					if (!bouncing)
+					if (!bouncing && Hunter && State == 2 && !skillDash)
+					{
+						HunterRefill();   // a hit gives the dash back, once until she's been on the ground a second
+					}
+					if (!bouncing && Wanderer && State == 2 && !skillDash)
+					{
+						WandererBounce();   // every dash hit bounces her straight back off it
+					}
+					else if (!bouncing)
 					{
 						reboundFrom = collider2D;   // a pogo's bounce already takes her off it
 						reboundFor = 0.4f;
@@ -2523,7 +2658,15 @@ public class MadelineController
 		if (flag && !skillDash)
 		{
 			float lockFor = 0f;
-			if (MaxDashes < 2)
+			if (wandererChainHit)
+			{
+				wandererChainHit = false;   // the Wanderer's refill hit: no lock, so the next dash can follow
+			}
+			else if (GroundPoke)
+			{
+				lockFor = 2f * HitLock(h);
+			}
+			else if (MaxDashes < 2)
 			{
 				lockFor = HitLock(h);
 			}
@@ -2648,19 +2791,11 @@ public class MadelineController
 		}
 	}
 
+	// the needle's damage; the enemy's own modifiers for that needle level are applied by the game, as for Hornet
+	// (user 2026-10-22: they replace the old 1.5x boss bonus, so a boss takes as many hits as it does from Hornet)
 	private static int Damage(IHitResponder r)
 	{
-		int nailDamage = PlayerData.instance.nailDamage;
-		HealthManager healthManager = r as HealthManager;
-		if (healthManager == null)
-		{
-			return nailDamage;
-		}
-		if (!BigEnemyDeath(healthManager) && !((float)Math.Max(InitHp(healthManager), healthManager.hp) >= 150f))
-		{
-			return nailDamage;
-		}
-		return Mathf.RoundToInt((float)nailDamage * 1.5f);
+		return PlayerData.instance.nailDamage;
 	}
 
 	private static bool IsBounceObject(IHitResponder r)

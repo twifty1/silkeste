@@ -27,7 +27,7 @@ public class BossRematch : MonoBehaviour
 	// checks tell (read out of the game's scene files): these are set for the visit and put back afterwards.
 	private static readonly string[][] Act1 = new string[34][]
 	{
-		new string[4] { "defeatedMossMother", "Moss Mother", "Tut_03", "" },
+		new string[5] { "defeatedMossMother", "Moss Mother", "Tut_03", "encounteredMossMother=true", "right1" },   // top1 is the hole from the intro: black screen
 		new string[4] { "defeatedBellBeast", "Bell Beast", "Bone_05", "BellCentipedeLocked=false" },
 		new string[4] { "defeatedLace1", "Lace", "Bone_East_12", "laceLeftDocks=false,visitedCitadel=false" },
 		new string[4] { "defeatedSongGolem", "Fourth Chorus", "Bone_East_08", "destroyedSongGolemRock=false" },
@@ -73,6 +73,30 @@ public class BossRematch : MonoBehaviour
 
 	// and with every way of getting around, so nothing on the way from the door to the boss is out of reach
 	private const string Moves = "hasDash=true,hasWalljump=true,hasHarpoonDash=true,hasDoubleJump=true,hasSuperJump=true,hasBrolly=true,hasChargeSlash=true";
+
+	// the needle a player has when they first reach each boss (user 2026-10-22: Records' rematches use it, not the
+	// file's own); the file's needle comes back when the rematch ends
+	private static readonly Dictionary<string, int> Needle = new Dictionary<string, int>
+	{
+		{ "defeatedMossMother", 0 }, { "defeatedBellBeast", 0 }, { "defeatedLace1", 0 }, { "defeatedSongGolem", 0 },
+		{ "defeatedBoneFlyerGiant", 0 }, { "defeatedVampireGnatBoss", 0 }, { "defeatedSplinterQueen", 0 },
+		{ "spinnerDefeated", 0 }, { "defeatedCoralDrillers", 0 }, { "defeatedDockForemen", 0 }, { "defeatedPhantom", 1 },
+		{ "defeatedLastJudge", 1 },
+		{ "defeatedCogworkDancers", 1 }, { "defeatedWispPyreEffigy", 1 }, { "DefeatedSwampShaman", 1 },
+		{ "defeatedCoralDrillerSolo", 1 }, { "defeatedTrobbio", 2 }, { "defeatedRoachkeeperChef", 2 },
+		{ "defeatedFirstWeaver", 2 }, { "wardBossDefeated", 2 }, { "defeatedZapCoreEnemy", 2 }, { "defeatedCrowCourt", 2 },
+		{ "defeatedBroodMother", 2 }, { "defeatedGreyWarrior", 2 }, { "defeatedAntTrapper", 2 },
+		{ "defeatedBoneFlyerGiantGolemScene", 2 }, { "defeatedLaceTower", 3 }, { "defeatedSongChevalierBoss", 3 },
+		{ "defeatedTormentedTrobbio", 3 }, { "defeatedFlowerQueen", 4 }, { "defeatedCoralKing", 4 },
+		{ "defeatedCloverDancers", 4 }, { "defeatedWhiteCloverstag", 4 }, { "defeatedAntQueen", 4 }, { "defeatedSeth", 4 }
+	};
+
+	// bosses whose doors are all far from the fight: Madeline starts this far from the boss instead (Moorwing: every
+	// door is down below her ledge, user 2026-10-22)
+	private static readonly Dictionary<string, Vector2> StartNear = new Dictionary<string, Vector2>
+	{
+		{ "defeatedVampireGnatBoss", new Vector2(-8f, -6f) }
+	};
 
 	// arenas whose closest door to the boss has been worked out
 	private static readonly HashSet<string> nearest = new HashSet<string>();
@@ -268,10 +292,34 @@ public class BossRematch : MonoBehaviour
 			h.Patch(AccessTools.Method(typeof(HeroController), "CanPlayNeedolin"), null, new HarmonyMethod(typeof(BossRematch), "NeedolinPostfix"));
 			h.Patch(AccessTools.Method(typeof(UIManager), "UIShowReturnMenuPrompt"), new HarmonyMethod(typeof(BossRematch), "QuitPrefix"));
 			h.Patch(AccessTools.Method(typeof(UIManager), "UIReturnToMainMenu"), new HarmonyMethod(typeof(BossRematch), "QuitPrefix"));
+			h.Patch(AccessTools.Method(typeof(SceneAdditiveLoadConditional), "TryTestLoad"), null, new HarmonyMethod(typeof(BossRematch), "LoaderPostfix"));
 		}
 		catch (Exception e)
 		{
 			Plugin.Log.LogWarning("Rematch hooks: " + e.Message);
+		}
+	}
+
+	// a boss scene the room only loads at one point of the story (Moorwing: not once Bellhart's been visited): in a
+	// rematch, a loader waiting for this boss's flag to be false always loads its boss (user 2026-10-22)
+	private static void LoaderPostfix(ref bool __result, ref bool ___loadAlt, string ___sceneNameToLoad, PlayerDataTest ___tests)
+	{
+		if (!Active || !___loadAlt || string.IsNullOrEmpty(___sceneNameToLoad) || ___tests?.TestGroups == null)
+		{
+			return;
+		}
+		foreach (PlayerDataTest.TestGroup g in ___tests.TestGroups)
+		{
+			foreach (PlayerDataTest.Test t in g.Tests ?? new PlayerDataTest.Test[0])
+			{
+				if (t.FieldName == activeFlag && t.Type == PlayerDataTest.TestType.Bool && !t.BoolValue)
+				{
+					___loadAlt = false;
+					__result = true;
+					Plugin.Log.LogInfo("Rematch: loading " + ___sceneNameToLoad + " for " + activeFlag);
+					return;
+				}
+			}
 		}
 	}
 
@@ -723,6 +771,44 @@ public class BossRematch : MonoBehaviour
 		}
 	}
 
+	private IEnumerator PlaceNearBoss(string flag)
+	{
+		float waited = 0f;
+		while (waited < 15f && (!string.Equals(SceneManager.GetActiveScene().name, arenaScene, StringComparison.OrdinalIgnoreCase) || HeroController.UnsafeInstance == null || HeroController.UnsafeInstance.cState.transitioning))
+		{
+			waited += Time.unscaledDeltaTime;
+			yield return null;
+		}
+		// the boss scene loads a moment after the room
+		HealthManager boss = null;
+		for (float t = 0f; boss == null && t < 5f; t += Time.unscaledDeltaTime)
+		{
+			foreach (HealthManager hm in UnityEngine.Object.FindObjectsByType<HealthManager>(FindObjectsSortMode.None))
+			{
+				if (hm != null && hm.hp >= 100 && hm.hp < 100000 && (boss == null || hm.hp > boss.hp))
+				{
+					boss = hm;
+				}
+			}
+			yield return null;
+		}
+		HeroController h = HeroController.UnsafeInstance;
+		if (!Active || activeFlag != flag || boss == null || h == null)
+		{
+			yield break;
+		}
+		Vector2 off = StartNear[flag];
+		h.transform.position = boss.transform.position + new Vector3(off.x, off.y, 0f);
+		try
+		{
+			GameCameras.instance?.cameraController?.PositionToHeroInstant(forceDirect: true);
+		}
+		catch (Exception)
+		{
+		}
+		Plugin.Log.LogInfo("Rematch: started next to " + boss.gameObject.name);
+	}
+
 	// fights that carry on in another scene (First Sinner's is a memory reached from her cage)
 	private static bool FightGoesOn(string flag, string sceneName)
 	{
@@ -854,6 +940,10 @@ public class BossRematch : MonoBehaviour
 			SetPre(pd, Moves);   // test builds only (F10): players rematch with their own setup (user 2026-10-17)
 		}
 		SetPre(pd, Row(flag)?[3]);
+		if (Needle.TryGetValue(flag, out int needle))
+		{
+			pd.nailUpgrades = needle;
+		}
 		activeFlag = flag;
 		arenaScene = where[0];
 		lastFlag = flag;
@@ -883,6 +973,10 @@ public class BossRematch : MonoBehaviour
 			StartCoroutine(Report(flag));   // the arena report only on the dev install: it's slow and log-heavy
 		}
 		StartCoroutine(Nearest(flag, where[1]));
+		if (StartNear.ContainsKey(flag))
+		{
+			StartCoroutine(PlaceNearBoss(flag));
+		}
 		if (Row(flag).Length > 5 && Row(flag)[5] == "start")
 		{
 			StartCoroutine(AutoStart(flag));
@@ -902,6 +996,27 @@ public class BossRematch : MonoBehaviour
 	// ---- during the rematch ------------------------------------------------------------------------------------
 	// ---- dev commands (only with silkeste_dev.txt): a line in dev_cmd.txt, so rematches can be tried without keys
 	private float cmdAt;
+
+	// dev: the hero, Madeline and the biggest enemy's main script every quarter second
+	private IEnumerator Track(float secs)
+	{
+		for (float t = 0f; t < secs; t += 0.25f)
+		{
+			HeroController h = HeroController.UnsafeInstance;
+			MadelineController c = Plugin.Controller;
+			HealthManager boss = null;
+			foreach (HealthManager hm in UnityEngine.Object.FindObjectsByType<HealthManager>(FindObjectsSortMode.None))
+			{
+				if (hm != null && hm.hp >= 100 && hm.hp < 100000 && (boss == null || hm.hp > boss.hp))
+				{
+					boss = hm;
+				}
+			}
+			PlayMakerFSM fsm = boss != null ? PlayMakerFSM.FindFsmOnGameObject(boss.gameObject, "Control") : null;
+			Plugin.Log.LogInfo("  track " + t.ToString("0.00") + " hero " + (h != null ? h.transform.position.ToString() + " relinquished " + h.controlReqlinquished + " clip " + h.GetComponent<tk2dSpriteAnimator>()?.CurrentClip?.name : "none") + (c != null ? " | madeline active " + c.Active + " state " + c.State + " ground " + c.OnGround + " speed " + c.Speed : "") + (boss != null ? " | " + boss.gameObject.name + " " + boss.transform.position + " " + fsm?.ActiveStateName : ""));
+			yield return new WaitForSecondsRealtime(0.25f);
+		}
+	}
 
 	private void DevCommands()
 	{
@@ -937,6 +1052,10 @@ public class BossRematch : MonoBehaviour
 			{
 				TechRoom.OfferAfterIntro();   // the "do you know Celeste's tech?" prompt
 			}
+			else if (p[0] == "recordshint")
+			{
+				RecordsHint.ShowNow();   // a look at the Records card shown after the first Moss Mother
+			}
 			else if (p[0] == "emotemenu")
 			{
 				EmoteMenu.Open();   // a look at the Emotes menu
@@ -947,6 +1066,12 @@ public class BossRematch : MonoBehaviour
 			}
 			else if (p[0] == "load" && p.Length > 1 && UIManager.instance != null)
 			{
+				if (UIManager.instance.uiState != GlobalEnums.UIState.MAIN_MENU_HOME)
+				{
+					// too early (the title still loading) breaks the menus, Esc included, until a restart
+					Plugin.Log.LogInfo("  load: the main menu isn't up yet");
+					return;
+				}
 				CelesteFileSelect.Continue(int.Parse(p[1]));
 				UIManager.instance.UIGoToProfileMenu();
 			}
@@ -1032,6 +1157,23 @@ public class BossRematch : MonoBehaviour
 					}
 				}
 			}
+			else if (p[0] == "fsmall" && p.Length > 1)
+			{
+				// every state of the hero's script with this name (dev: what Bind does in the air)
+				HeroController hh = HeroController.UnsafeInstance;
+				foreach (PlayMakerFSM fsm in hh != null ? hh.GetComponents<PlayMakerFSM>() : new PlayMakerFSM[0])
+				{
+					if (fsm != null && fsm.FsmName == cmd.Substring(7).Trim())
+					{
+						Plugin.Log.LogInfo("  fsmall " + fsm.FsmName + " state=" + fsm.ActiveStateName);
+						foreach (HutongGames.PlayMaker.FsmTransition tr in fsm.FsmGlobalTransitions)
+						{
+							Plugin.Log.LogInfo("    global " + tr.EventName + " -> " + tr.ToState);
+						}
+						DumpStates(fsm.FsmStates);
+					}
+				}
+			}
 			else if (p[0] == "who" && p.Length > 1)
 			{
 				// which scripts send an event, and from which step (to find what starts a fight)
@@ -1095,6 +1237,10 @@ public class BossRematch : MonoBehaviour
 			{
 				HeroController h = HeroController.UnsafeInstance;
 				Plugin.Log.LogInfo("  hero " + (h != null ? h.transform.position.ToString() + " dead " + h.cState.dead + " relinquished " + h.controlReqlinquished : "none") + " scene " + SceneManager.GetActiveScene().name);
+			}
+			else if (p[0] == "track")
+			{
+				StartCoroutine(Track(p.Length > 1 ? float.Parse(p[1], System.Globalization.CultureInfo.InvariantCulture) : 5f));
 			}
 		}
 		catch (Exception e)

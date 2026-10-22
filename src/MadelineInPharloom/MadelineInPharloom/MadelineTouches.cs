@@ -42,6 +42,38 @@ public class MadelineTouches : MonoBehaviour
 		{
 			Plugin.Log.LogWarning("Her name: " + e.Message);
 		}
+		try
+		{
+			new Harmony("silkeste.bind").Patch(AccessTools.Method(typeof(CheckIsCharacterGrounded), "DoAction"), new HarmonyMethod(typeof(MadelineTouches), "BindGroundPrefix"));
+			MenuInputGuard.Patch(new Harmony("silkeste.menuinput"));
+		}
+		catch (Exception e)
+		{
+			Plugin.Log.LogWarning("Bind ground check: " + e.Message);
+		}
+	}
+
+	// The bind takes its silk, picks the ground or air bind from Madeline's own ground check, then keeps checking with
+	// Hornet's raycasts and ends the bind with no heal when they disagree (an air bind started just above the floor,
+	// user 2026-10-22). Madeline is held still while binding, so the bind it picked stands.
+	private static bool BindGroundPrefix(CheckIsCharacterGrounded __instance)
+	{
+		HeroController h = HeroController.UnsafeInstance;
+		string state = __instance.State?.Name;
+		if (h == null || __instance.Fsm == null || __instance.Fsm.Name != "Bind" || __instance.Fsm.GameObject != h.gameObject || (state != "Bind Ground" && state != "Binding"))
+		{
+			return true;
+		}
+		bool ground = state == "Bind Ground";
+		if (__instance.StoreResult != null && !__instance.StoreResult.IsNone)
+		{
+			__instance.StoreResult.Value = ground;
+		}
+		if (ground && __instance.GroundedEvent != null)
+		{
+			__instance.Fsm.Event(__instance.GroundedEvent);
+		}
+		return false;
 	}
 
 	private static void NamePostfix(ref string __result)

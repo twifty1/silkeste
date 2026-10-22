@@ -317,7 +317,7 @@ public static class AssistOptions
 		Id = "skin",
 		Section = "Appearance",
 		Label = "Skin",
-		Values = "Madeline,Badeline,Pink Cat,Sunset,Midnight,Mint,Crimson,Royal,Hornet,Lavender,Golden",
+		Values = "Madeline,Badeline,Sunset,Midnight,Mint,Crimson,Royal,Hornet,Lavender,Golden",   // no cat skins (user 2026-10-22)
 		Default = "Madeline",
 		Description = "Who this look is. Make your own with the rows below."
 	};
@@ -388,7 +388,7 @@ public static class AssistOptions
 		Id = "outfit",
 		Section = "Appearance",
 		Label = "Outfit",
-		Values = "Skin default,Madeline,Snowbound,Core,Reflection,Forest,Pharloom,Pink Cat,Sunset,Midnight,Mint,Crimson,Royal,Hornet,Lavender,Golden",
+		Values = "Skin default,Madeline,Snowbound,Core,Reflection,Forest,Pharloom,Sunset,Midnight,Mint,Crimson,Royal,Hornet,Lavender,Golden",
 		Default = "Skin default",
 		Description = "Her clothes in another skin's colours. Madeline-shaped skins only (not Badeline or the Knight)."
 	};
@@ -709,11 +709,11 @@ public static class AssistOptions
 		Description = "Turns off Silksong's heaviest camera effects (the cinematic blur, bloom, lens distortion and grain) while a cutscene plays, so slower PCs keep up. Cutscenes look a little plainer; gameplay is unchanged."
 	};
 
-	public static readonly AssistRow[] All = new AssistRow[62]
+	public static readonly AssistRow[] All = new AssistRow[61]
 	{
 		GameSpeed, InfiniteStamina, DashAssist, Invincibility, ForgivingJumps, JumpCount, DashLength, DashCount, Respawn, MirrorMode,
 		LowFriction, SuperDashing, InvisibleMotion, Gravity, Wind, MadelineSpeed, Bouncy, Hiccups, NoGrabbing, NoClimbJump,
-		NoWallJump, OneHit, HalfStamina, NoWallSlide, LongHitLock, Timer, TimerBerries, AutoSkip, Look, CatEars, Skin,
+		NoWallJump, OneHit, HalfStamina, NoWallSlide, LongHitLock, Timer, TimerBerries, AutoSkip, Look, Skin,
 		Backpack, Outfit, HairOne, HairZero, HairLength, HairSize, HairEffect, DashTrail, LandingEffects, DashColourRush, HerName,
 		KeySkin, KeySettings, KeyRecords, KeyCamera, KeyEmote, TitleSky, TitleArea,
 		StartClimb, StartDoubleDash, StartGlide, StartClawline, StartSilkSoar, LightCutscenes,

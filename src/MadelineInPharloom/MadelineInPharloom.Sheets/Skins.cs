@@ -382,9 +382,10 @@ public static class Skins
 		GlowCompensation = 0f
 	};
 
-	public static readonly SkinRow[] All = new SkinRow[20]
+	// Madeline first, Badeline second, then the rest; no cat skins (user 2026-10-22)
+	public static readonly SkinRow[] All = new SkinRow[18]
 	{
-		Madeline, Cat, Pinkcat, Knight, Badeline, Ghost, Pico8, Snow, Core, Reflection,
+		Madeline, Badeline, Knight, Ghost, Pico8, Snow, Core, Reflection,
 		Forest, Pharloom, SunsetLook, MidnightLook, MintLook, CrimsonLook, RoyalLook, HornetLook, LavenderLook, GoldenLook
 	};
 }

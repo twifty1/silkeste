@@ -256,7 +256,7 @@ public static class Visuals
 
 	public const string HairColorNames = "Red:AC3232;Purple:9B3FB5;Ghost Blue:9FC0FF;Pale Blue:D8E6FF;Blue:44B7FF;Pink:FF6DEF;PICO Red:FF004D;PICO Blue:29ADFF;PICO Green:00E436;Snow:D3DDF2;Orange:E07A2E;Violet:8E5BFF;Rust:C04A3C;Ivory:D9D1C5;Light Pink:FFB3D4;Gold:F7C948;Blonde:F2D16B;Brown:7A4A2A;Black:2E2E38;White:F4F4F4;Silver:B8C0CC;Green:4CAF50;Mint:7FE0B5;Teal:2BB3B1;Navy:2C3E8C;Lavender:C3A6FF;Crimson:9E1030;Peach:FFB38A";
 
-	public const string LookDefaultSkins = "Madeline,Badeline,Pink Cat,Sunset";
+	public const string LookDefaultSkins = "Madeline,Madeline,Madeline,Madeline";
 
 	public const float AreaCardTime = 4f;
 

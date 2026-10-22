@@ -466,7 +466,7 @@ public class AssistMode : MonoBehaviour
 		}
 	}
 
-	public static bool CatEars => Value(AssistOptions.CatEars) == "On";
+	public static bool CatEars => false;   // the cat ears are gone (user 2026-10-22)
 
 	public static int HairLength => HairLengths[Math.Min(HairLengths.Length - 1, Index(AssistOptions.HairLength))];
 
@@ -744,7 +744,7 @@ public class AssistMode : MonoBehaviour
 	{
 		if (r.Id == AssistOptions.Skin.Id)
 		{
-			string[] array = "Madeline,Badeline,Knight,Pink Cat".Split(new char[1] { ',' });
+			string[] array = "Madeline,Madeline,Madeline,Madeline".Split(new char[1] { ',' });   // all 4 looks start as Madeline (user 2026-10-22)
 			int num = Array.IndexOf(Values(r), array[Math.Min(look, array.Length - 1)]);
 			if (num >= 0)
 			{
@@ -1597,6 +1597,10 @@ public class AssistMode : MonoBehaviour
 			}
 		}
 		Presets.Tick();
+		if (InSave(out _))
+		{
+			MadelineController.EnsureWandererCrest();
+		}
 		if (pendingMark && InSave(out _))
 		{
 			pendingMark = false;

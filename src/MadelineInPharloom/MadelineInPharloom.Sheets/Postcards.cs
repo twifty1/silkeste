@@ -2,8 +2,9 @@ namespace MadelineInPharloom.Sheets;
 
 public static class Postcards
 {
-	// the Tutorial card (shown on a new save and on the help key), rewritten 2026-10-17 to guide a first run
-	private const string TutorialText = "Welcome to Pharloom, Madeline!\n- Attack is your Dash: aim it any of 8 ways.\n- Dashing hits enemies, and nothing hits you.\n- Touch the ground to get your dash back.\n- Cling Grip: climb and wall jump.\n- Faydown Cloak: a double jump.\n- Try supers, hypers and wavedashes.\n- {key:key_records} Records: bosses, rematches, photos\n- {key:key_settings} Settings and keys\n- A controller is recommended. Have fun!";
+	// the Tutorial card (shown on a new save and on the help key), rewritten 2026-10-17 to guide a first run; only the
+	// important things since 2026-10-22, with the two crests
+	private const string TutorialText = "Welcome to Pharloom, Madeline!\n- Attack is your Dash: aim it any of 8 ways.\n- Nothing hits you while you dash.\n- Touch the ground to get your dash back.\n- Hunter Crest: hits bounce you, chain in the air.\n- Wanderer Crest: hits refill, then a short lock.\n- Switch crests at any bench.\n- {key:key_records} Records   {key:key_settings} Settings";
 
 	public static readonly PostcardRow Intro = new PostcardRow
 	{

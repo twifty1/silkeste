@@ -389,6 +389,10 @@ public class SpeedrunPlus : BaseUnityPlugin
 
 	private static void BossPost(string title, bool assist)
 	{
+		if (BossRematch.Active)
+		{
+			return;   // rematches stay out of the run (user 2026-10-22)
+		}
 		string text = V(Splits);
 		if (text == "Bosses + Areas" || text == "Bosses")
 		{
@@ -437,6 +441,11 @@ public class SpeedrunPlus : BaseUnityPlugin
 			LoadRun(timer.slot);
 		}
 		BossCard.Fight fight = ((BossCard.Instance != null) ? BossCard.Instance.fight : null);
+		if (BossRematch.Active)
+		{
+			lastFight = fight;   // no tries, splits or room times from a rematch (user 2026-10-22)
+			return;
+		}
 		if (fight != null && fight != lastFight)
 		{
 			fightTitle = (string.IsNullOrEmpty(fight.Title) ? fight.Id : fight.Title);

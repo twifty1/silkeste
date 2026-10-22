@@ -317,6 +317,7 @@ public class Plugin : BaseUnityPlugin
 			base.gameObject.AddComponent<CutsceneFx>();
 			base.gameObject.AddComponent<EmoteMenu>();
 			base.gameObject.AddComponent<TechTipsGui>();
+			base.gameObject.AddComponent<RecordsHint>();
 			base.gameObject.AddComponent<TechRoom>();
 			AssistMode.DataDir = (BossCard.DataDir = (SpeedrunTimer.DataDir = text));
 			BossCard.ResetFlag = Path.Combine(Path.GetDirectoryName(base.Info.Location), "reset_records.flag");
