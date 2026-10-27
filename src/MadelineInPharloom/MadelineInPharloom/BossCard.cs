@@ -220,6 +220,13 @@ public class BossCard : MonoBehaviour
 
 	private TimeManager.TimeControlInstance viewPause;
 
+	// released before quitting, so its finalizer doesn't touch Time.timeScale off the main thread (AssistMode's too)
+	private void OnApplicationQuit()
+	{
+		viewPause?.Release();
+		viewPause = null;
+	}
+
 	private readonly Dictionary<string, string> flagBoss = new Dictionary<string, string>();
 
 	private readonly HashSet<int> importedSlots = new HashSet<int>();

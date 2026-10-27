@@ -31,6 +31,25 @@ public class AssistMode : MonoBehaviour
 
 	private TimeManager.TimeControlInstance dashFreeze;
 
+	// a time control still held when the game quits is released by its finalizer on the GC thread, which touches
+	// Time.timeScale there and crashes the game on exit (player crash on 2.3.2, user 2026-10-27): let them go first
+	private void OnApplicationQuit()
+	{
+		speedControl?.Release();
+		menuPause?.Release();
+		dashFreeze?.Release();
+		speedControl = menuPause = dashFreeze = null;
+		// and any the game still holds (a rematch given up mid-freeze, say): with the list empty, a finalizer's
+		// Release finds nothing to remove and leaves Time alone
+		try
+		{
+			(HarmonyLib.AccessTools.Field(typeof(TimeManager), "_timeControlInstances")?.GetValue(null) as System.Collections.IList)?.Clear();
+		}
+		catch (Exception)
+		{
+		}
+	}
+
 	private float tauntHeld;
 
 	private float dashFreezeFor;
