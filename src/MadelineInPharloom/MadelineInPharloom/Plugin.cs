@@ -254,6 +254,7 @@ public class Plugin : BaseUnityPlugin
 	private void Awake()
 	{
 		Log = base.Logger;
+		MeltyNetGuard.Install();
 		string text = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "MadelineInPharloom");
 		skinFile = Path.Combine(text, "skin.cfg");
 		controlsFile = Path.Combine(text, "controls.cfg");
@@ -318,6 +319,7 @@ public class Plugin : BaseUnityPlugin
 			base.gameObject.AddComponent<EmoteMenu>();
 			base.gameObject.AddComponent<TechTipsGui>();
 			base.gameObject.AddComponent<RecordsHint>();
+			base.gameObject.AddComponent<CrestHint>();
 			base.gameObject.AddComponent<TechRoom>();
 			AssistMode.DataDir = (BossCard.DataDir = (SpeedrunTimer.DataDir = text));
 			BossCard.ResetFlag = Path.Combine(Path.GetDirectoryName(base.Info.Location), "reset_records.flag");
@@ -613,10 +615,78 @@ public class Plugin : BaseUnityPlugin
 		}
 	}
 
+	private static BoxCollider2D hurtBox;
+
+	private static Vector2 hurtSize;
+
+	private static Vector2 hurtOffset;
+
+	private static Vector2 duckSize;
+
+	private static Vector2 duckOffset;
+
+	// ducking: Celeste's duck hurt box stops 6 px above her feet (user 2026-11-09)
+	private const float DuckTopPx = 6f;
+
+	// the box she gets hit on is Hornet's HeroBox: as thin as her body but 18 px tall, well over Madeline's head.
+	// Celeste's hurt box stops 11 px above her feet, so the top is cut down to that; the width and the feet stay
+	// Hornet's, so walls she stands against and spikes she lands on work as before (user 2026-11-09)
+	private const float HurtTopPx = 11f;
+
+	private static void FitHurtBox()
+	{
+		HeroController h = HeroController.UnsafeInstance;
+		if (h == null)
+		{
+			hurtBox = null;
+			return;
+		}
+		if (hurtBox == null)
+		{
+			Collider2D body = h.GetComponent<Collider2D>();
+			HeroBox hb = h.GetComponentInChildren<HeroBox>(includeInactive: true);
+			BoxCollider2D hurt = hb != null ? hb.GetComponent<BoxCollider2D>() : null;
+			if (body == null || hurt == null || !body.enabled)
+			{
+				return;
+			}
+			Bounds b = body.bounds;
+			Bounds u = hurt.bounds;
+			float scaleY = Math.Abs(hurt.transform.lossyScale.y);
+			if (scaleY < 0.0001f)
+			{
+				return;
+			}
+			float top = b.min.y + HurtTopPx / 8f;
+			if (top >= u.max.y)
+			{
+				return;
+			}
+			float worldH = top - u.min.y;
+			hurtSize = new Vector2(hurt.size.x, worldH / scaleY);
+			hurtOffset = new Vector2(hurt.offset.x, hurt.offset.y + (u.min.y + worldH / 2f - u.center.y) / scaleY);
+			float duckH = b.min.y + DuckTopPx / 8f - u.min.y;
+			duckSize = new Vector2(hurt.size.x, duckH / scaleY);
+			duckOffset = new Vector2(hurt.offset.x, hurt.offset.y + (u.min.y + duckH / 2f - u.center.y) / scaleY);
+			hurtBox = hurt;
+			Log.LogInfo("Hurt box (Celeste px): Hornet's " + (u.size.x * 8f).ToString("0.0") + " x " + (u.size.y * 8f).ToString("0.0") + ", now " + (u.size.x * 8f).ToString("0.0") + " x " + (worldH * 8f).ToString("0.0") + " (top " + HurtTopPx + " px above her feet, as in Celeste)");
+		}
+		bool ducking = Controller.Active && Controller.Ducking && Controller.OnGround;
+		Vector2 size = ducking ? duckSize : hurtSize;
+		Vector2 offset = ducking ? duckOffset : hurtOffset;
+		if (hurtBox.size != size || hurtBox.offset != offset)
+		{
+			hurtBox.size = size;
+			hurtBox.offset = offset;
+		}
+	}
+
 	private void Update()
 	{
 		Sfx.Pump();
 		SetDefaultControlsOnce();
+		FitHurtBox();
+		Feel.Tick();
 		if (assets == null)
 		{
 			if (prepareError != null)

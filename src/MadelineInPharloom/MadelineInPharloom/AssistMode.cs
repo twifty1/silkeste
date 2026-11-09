@@ -39,6 +39,7 @@ public class AssistMode : MonoBehaviour
 		menuPause?.Release();
 		dashFreeze?.Release();
 		speedControl = menuPause = dashFreeze = null;
+		Feel.Release();
 		// and any the game still holds (a rematch given up mid-freeze, say): with the list empty, a finalizer's
 		// Release finds nothing to remove and leaves Time alone
 		try

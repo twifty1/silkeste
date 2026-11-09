@@ -531,7 +531,8 @@ public static class TechTips
 		if (p[id] >= Reps)
 		{
 			Plugin.Log.LogInfo("Tech tips: " + id + " learned on file " + slot);
-			if (On)
+			// the tutorial's sounds stay in the tutorial (user 2026-11-09: heard them after saying no to it)
+			if (On && TechRoom.Active)
 			{
 				DoneAt = Now;
 				DoneName = Lessons[l].Name;
@@ -539,7 +540,7 @@ public static class TechTips
 				Sfx.Play(Sounds.FeatherGet.Id);
 			}
 		}
-		else if (coached && On)
+		else if (coached && On && TechRoom.Active)
 		{
 			RepAt = Now;
 			RepLesson = l;

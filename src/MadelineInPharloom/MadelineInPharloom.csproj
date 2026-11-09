@@ -18,6 +18,8 @@
       <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Hollow Knight Silksong\Hollow Knight Silksong_Data\Managed\Assembly-CSharp.dll</HintPath><Private>False</Private></Reference>
     <Reference Include="Unity.InputSystem">
       <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Hollow Knight Silksong\Hollow Knight Silksong_Data\Managed\Unity.InputSystem.dll</HintPath><Private>False</Private></Reference>
+    <Reference Include="TeamCherry.SharedUtils">
+      <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Hollow Knight Silksong\Hollow Knight Silksong_Data\Managed\TeamCherry.SharedUtils.dll</HintPath><Private>False</Private></Reference>
     <Reference Include="TeamCherry.Localization">
       <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Hollow Knight Silksong\Hollow Knight Silksong_Data\Managed\TeamCherry.Localization.dll</HintPath><Private>False</Private></Reference>
     <Reference Include="System.Xml" />

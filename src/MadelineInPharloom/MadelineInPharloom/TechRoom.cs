@@ -1898,23 +1898,10 @@ public class TechRoom : MonoBehaviour
 	}
 
 	// ---- a hit-stop (user 2026-10-22: the Wanderer's hits should feel stronger): the game nearly freezes for a blink
+	// (2026-11-09: through Feel's time control now; setting Time.timeScale directly could leave the game slowed)
 	public static void HitStop(float secs)
 	{
-		if (Instance != null && Time.timeScale > 0.05f)
-		{
-			Instance.StartCoroutine(Instance.DoHitStop(secs));
-		}
-	}
-
-	private System.Collections.IEnumerator DoHitStop(float secs)
-	{
-		float before = Time.timeScale;
-		Time.timeScale = 0.02f;
-		yield return new WaitForSecondsRealtime(secs);
-		if (Math.Abs(Time.timeScale - 0.02f) < 0.001f)
-		{
-			Time.timeScale = before;
-		}
+		Feel.Freeze(secs);
 	}
 
 	// ---- the slow-motion help: right after the dash, the game slows and the Jump button flashes -------------------
@@ -1923,15 +1910,18 @@ public class TechRoom : MonoBehaviour
 
 	private float slowAt;
 
+	// a time control, not Time.timeScale: the dash's freeze (Feel) lets go right after and would undo a direct write
+	private TimeManager.TimeControlInstance slowControl;
+
 	private void Assist(int i)
 	{
-		if (assistLeft[i] <= 0 || Time.timeScale < 0.9f)
+		if (assistLeft[i] <= 0 || slowOn)
 		{
 			return;
 		}
 		slowOn = true;
 		slowAt = Time.unscaledTime;
-		Time.timeScale = 0.25f;
+		slowControl = TimeManager.CreateTimeControl(0.25f);
 	}
 
 	private void EndSlow()
@@ -1941,10 +1931,14 @@ public class TechRoom : MonoBehaviour
 			return;
 		}
 		slowOn = false;
-		if (Math.Abs(Time.timeScale - 0.25f) < 0.01f)
-		{
-			Time.timeScale = 1f;
-		}
+		slowControl?.Release();
+		slowControl = null;
+	}
+
+	private void OnApplicationQuit()
+	{
+		slowControl?.Release();
+		slowControl = null;
 	}
 
 	private void WatchSlow()

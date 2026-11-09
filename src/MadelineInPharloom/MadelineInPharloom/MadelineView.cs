@@ -1215,6 +1215,7 @@ public partial class MadelineView
 		{
 			deathSounded = true;
 			Sfx.Play(Sounds.Death.Id);
+			Feel.Rumble(Feel.Strong, Feel.Long);
 		}
 		body.color = new Color(1f, 1f, 1f, 1f - Mathf.Clamp01(num4));
 		DrawBurst(vector + new Vector3(0f, 6f * num, -0.0004f), deathColor, num4);

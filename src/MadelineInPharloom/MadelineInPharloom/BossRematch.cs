@@ -1056,6 +1056,10 @@ public class BossRematch : MonoBehaviour
 			{
 				RecordsHint.ShowNow();   // a look at the Records card shown after the first Moss Mother
 			}
+			else if (p[0] == "cresthint")
+			{
+				CrestHint.ShowNow();   // a look at the crests card shown at the first bench
+			}
 			else if (p[0] == "emotemenu")
 			{
 				EmoteMenu.Open();   // a look at the Emotes menu

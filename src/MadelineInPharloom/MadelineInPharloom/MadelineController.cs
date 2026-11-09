@@ -350,16 +350,16 @@ public class MadelineController
 	private float reboundFor;
 
 	// ---- crests (user 2026-10-22) -------------------------------------------------------------------------------------
-	/// <summary>The bounce style: a shorter dash that always bounces off what it hits. The default, on every crest but
-	/// the Wanderer (user 2026-10-22: the Hunter and Wanderer effects swapped places).</summary>
-	private static bool Wanderer => PlayerData.instance != null && PlayerData.instance.CurrentCrestID != "Wanderer";
+	/// <summary>The bounce style: a shorter dash that always bounces off what it hits. On the Wanderer crest only
+	/// (user 2026-11-09: the default is dashing through enemies again).</summary>
+	private static bool Wanderer => PlayerData.instance != null && PlayerData.instance.CurrentCrestID == "Wanderer";
 
 	private bool wandererRefillReady = true;
 
 	// the Hunter crest (user 2026-10-22): hitting an enemy (bosses too) gives the dash back, so a second dash can
 	// follow; after that the refill returns 1 s after she next touches the ground
-	// the refill style, on the Wanderer crest only (user 2026-10-22)
-	private static bool Hunter => PlayerData.instance != null && PlayerData.instance.CurrentCrestID == "Wanderer";
+	// the refill style, the default on every crest but the Wanderer: the dash goes through what it hits (user 2026-11-09)
+	private static bool Hunter => PlayerData.instance != null && PlayerData.instance.CurrentCrestID != "Wanderer";
 
 	private static float crestCheckAt;
 
@@ -389,6 +389,22 @@ public class MadelineController
 
 	private bool hunterRefillReady = true;
 
+	// a kill on the ground gives everything back: the lock is gone and the refill is ready (user 2026-11-09)
+	private void HunterKillReset()
+	{
+		hunterLocked = false;
+		hunterLockWaitGround = false;
+		hunterLockTimer = 0f;
+		hunterSecondPending = false;
+		hunterRefillReady = true;
+		hunterWaitGround = false;
+		hitLockTimer = 0f;
+		dashCooldownTimer = 0f;
+		Dashes = MaxDashes;
+		HairFlashTimer = 0.12f;
+		Sfx.Play(Sounds.Refill.Id, 0.6f);
+	}
+
 	private bool hunterWaitGround;
 
 	private float hunterLandedAt = -10f;
@@ -409,7 +425,14 @@ public class MadelineController
 		hunterSecondPending = true;   // the next dash, whenever it comes, is the second one
 	}
 
-	// after the Hunter's second dash: no dashing for 1.5 s from when that dash is over (user 2026-10-22)
+	// after the Hunter's second dash: no dashing for a moment from when that dash is over (user 2026-10-22; 1.5 s
+	// until 2026-11-09, when the second dash got half damage and a shorter lock)
+	private const float HunterLockFor = 1f;
+
+	private const float SecondDashDamage = 0.5f;
+
+	private bool secondDashNow;
+
 	private bool hunterLocked;
 
 	private bool hunterLockWaitGround;
@@ -425,11 +448,11 @@ public class MadelineController
 		{
 			if (hunterLockWaitGround)
 			{
-				// user 2026-10-22: 1.5 s from when the second dash (and its hit) is over, wherever she is
+				// user 2026-10-22: counted from when the second dash (and its hit) is over, wherever she is
 				if (State != 2)
 				{
 					hunterLockWaitGround = false;
-					hunterLockTimer = 1.5f;
+					hunterLockTimer = HunterLockFor;
 				}
 			}
 			else if ((hunterLockTimer -= dt) <= 0f)
@@ -1251,7 +1274,10 @@ public class MadelineController
 			if (dxPx == 0f)
 			{
 				ColliderDistance2D colliderDistance2D = Col(h).Distance(collider2D);
-				if (colliderDistance2D.isValid && colliderDistance2D.distance < 0f && Math.Abs(colliderDistance2D.normal.x) > Math.Abs(colliderDistance2D.normal.y))
+				// a wall she's pushed into isn't ground; but where the wall and the floor are one piece, the floor
+				// under her middle still is (user 2026-11-09: a ground dash ending a hair inside such a wall left her
+				// "in the air" while standing, and the ledge boost fired against it over and over)
+				if (colliderDistance2D.isValid && colliderDistance2D.distance < 0f && Math.Abs(colliderDistance2D.normal.x) > Math.Abs(colliderDistance2D.normal.y) && !(dyPx > 0f && UnderFeet(bounds, dyPx, collider2D)))
 				{
 					continue;
 				}
@@ -1270,6 +1296,16 @@ public class MadelineController
 			return true;
 		}
 		return false;
+	}
+
+	private readonly Collider2D[] underFeet = new Collider2D[16];
+
+	// a thin strip just under the middle half of her feet, clear of the walls at her sides
+	private bool UnderFeet(Bounds bounds, float dyPx, Collider2D c)
+	{
+		Vector2 center = new Vector2(bounds.center.x, bounds.min.y - dyPx / 16f);
+		int n = Physics2D.OverlapBoxNonAlloc(center, new Vector2(bounds.size.x * 0.5f, Math.Max(dyPx, 1f) / 8f), 0f, underFeet, 33562880);
+		return Array.IndexOf(underFeet, c, 0, n) >= 0;
 	}
 
 	private bool SolidPoint(Vector2 p)
@@ -1463,6 +1499,10 @@ public class MadelineController
 				{
 					Sfx.PlaySurface("landing", 0.6f);
 				}
+				if (Speed.y >= 160f)
+				{
+					Feel.Rumble(Feel.Light, Feel.Short);   // a big landing
+				}
 				if (Speed.y >= 80f)
 				{
 					Particles.Dust(Feet(), -MathF.PI / 2f, 8);
@@ -1547,6 +1587,10 @@ public class MadelineController
 		}
 		wasOnGround = OnGround;
 		OnGround = Speed.y >= 0f && Solid(h, 0f, 1f);
+		if (OnGround)
+		{
+			ledgeBoostUsed = false;   // landed: the ledge boost can go again
+		}
 		if (WallSlideDir != 0)
 		{
 			wallSlideTimer = Math.Max(wallSlideTimer - dt, 0f);
@@ -2269,7 +2313,16 @@ public class MadelineController
 		{
 			return false;
 		}
-		float num3 = num2 * 8f + 2f;
+		// user 2026-11-09: against a low wall she could fall just short, land against it and boost again every few
+		// frames (the climb sound over and over, stuck to the wall): more lift, and not again in the same spot at once
+		// after a boost, none again in the same spot until she's landed or moved away
+		if (ledgeBoostUsed && Mathf.Abs(bounds.center.x - ledgeBoostX) < 0.5f)
+		{
+			return false;
+		}
+		ledgeBoostUsed = true;
+		ledgeBoostX = bounds.center.x;
+		float num3 = num2 * 8f + 6f;
 		Speed.y = 0f - Mathf.Sqrt(1800f * num3);
 		Speed.x = (float)Facing * 100f;
 		forceMoveX = 0;
@@ -2278,6 +2331,10 @@ public class MadelineController
 		Sfx.Play(Sounds.ClimbLedge.Id);
 		return true;
 	}
+
+	private bool ledgeBoostUsed;
+
+	private float ledgeBoostX;
 
 	private bool Occupied(Vector2 center, Vector2 size)
 	{
@@ -2342,15 +2399,20 @@ public class MadelineController
 		dashBuffer = 0f;
 		calledDashEvents = false;
 		dashStartedOnGround = OnGround;
+		secondDashNow = false;
 		if (hunterSecondPending)
 		{
 			hunterSecondPending = false;
-			hunterLocked = true;   // this is the Hunter's second dash: no dashing for 1.5 s once it's over
+			hunterLocked = true;   // this is the Hunter's second dash: no dashing for a moment once it's over
 			hunterLockWaitGround = true;
+			secondDashNow = true;
 		}
 		wandererChainDash = Wanderer && !OnGround && !wandererRefillReady;   // the dash the air refill gave back
 		dashCooldownTimer = 0.2f;
 		dashRefillCooldownTimer = 0.1f;
+		// Celeste's dash: the game stops for a blink and the pad kicks (user 2026-11-09)
+		Feel.Freeze(0.05f);
+		Feel.Rumble(Feel.Strong, Feel.MediumLength);
 		wallSlideTimer = 1.2f;
 		dashAttackTimer = 0.3f;
 		beforeDashSpeed = Speed;
@@ -2573,6 +2635,7 @@ public class MadelineController
 			num2 += 360f;
 		}
 		bool flag = false;
+		bool killedOnGround = false;
 		for (int i = 0; i < num; i++)
 		{
 			Collider2D collider2D = overlap[i];
@@ -2599,7 +2662,8 @@ public class MadelineController
 					IsFirstHit = true,
 					AttackType = AttackTypes.Nail,
 					NailElement = NailElements.None,
-					DamageDealt = (bouncing ? BounceDamage((HealthManager)hitResponder) : Damage(hitResponder)),   // (the Wanderer's +30% chain damage is gone, user 2026-10-22)
+					// (the Wanderer's +30% chain damage is gone, user 2026-10-22; the Hunter's second dash does half, 2026-11-09)
+					DamageDealt = (bouncing ? BounceDamage((HealthManager)hitResponder) : (secondDashNow && Hunter) ? Math.Max(1, Mathf.RoundToInt(Damage(hitResponder) * SecondDashDamage)) : Damage(hitResponder)),
 					IsUsingNeedleDamageMult = !bouncing,   // each enemy's own needle-level damage modifiers, as for Hornet's needle
 					StunDamage = 1f,
 					Direction = num2,
@@ -2627,6 +2691,11 @@ public class MadelineController
 				}
 				if (hitResponse.response == IHitResponder.Response.DamageEnemy && hitResponder is HealthManager)
 				{
+					HealthManager hurt = (HealthManager)hitResponder;
+					if (Hunter && OnGround && !skillDash && (hurt.GetIsDead() || hurt.hp <= 0))
+					{
+						killedOnGround = true;
+					}
 					if (!bouncing && Hunter && State == 2 && !skillDash)
 					{
 						HunterRefill();   // a hit gives the dash back, once until she's been on the ground a second
@@ -2689,6 +2758,14 @@ public class MadelineController
 			{
 				hitLockTimer = lockFor * (AssistMode.LongHitLock ? 2.5f : 1f);
 			}
+		}
+		if (killedOnGround)
+		{
+			HunterKillReset();
+		}
+		if (flag)
+		{
+			Feel.Rumble(Feel.Medium, Feel.Short);   // a dash that hit something
 		}
 		if (flag && State == 2 && DashDir.y > 0f)
 		{

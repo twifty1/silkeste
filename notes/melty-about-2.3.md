@@ -10,8 +10,12 @@
 - **Make her yours:** 11 skins, 29 hair colours, hats, a Celeste companion (the bird, berries, a crystal heart...), auras and emotes.
 - **Feels like Celeste:** the title screen, menus and save files look like Celeste's, conversations use Celeste's text boxes, dying plays Celeste's death burst and respawn, and resting at a bench is like sitting by Celeste's campfire.
 
+### New in 2.3.4
+- **Feels more like Celeste:** a split-second freeze when you dash, controller rumble, and a smaller hurt area like Celeste's (smaller still when you duck).
+- **No more lag or stuck dialogue:** Silkeste is single-player, so Melty's multiplayer layer stays out of it.
+
 ### New in 2.3
-- **Two crests, two ways to dash:** Hunter bounces you off what you hit for chains; Wanderer refills your dash on a hit for a quick double strike. Both are on every file: switch at any bench.
+- **Two crests, two ways to dash:** with Hunter you dash through enemies and can dash again right away; with Wanderer you bounce off them. Both are on every file, and you can change crests at any bench.
 - **Fairer bosses:** dash hits use each boss's own damage modifiers, so fights take about as many hits as they do for Hornet.
 - **Better rematches:** Moss Mother and Moorwing work, and each rematch gives you the needle you'd have at that boss.
 
@@ -33,7 +37,7 @@ Everything can be rebound in Settings.
 
 ### Good to know
 - **Climbing** comes with Cling Grip, a **double jump** with the Faydown Cloak, and a **jellyfish glide** with the Drifter's Cloak. You can also start with them.
-- **Don't spam your dash:** a hit locks it for a moment, and her hair turns blue until it's back.
+- **Don't spam your dash:** after a hit you wait a moment, and her hair turns blue until it's back.
 - **Celeste's Assist Mode, Variants and Challenges** for easier, silly or brutal runs.
 - **Extras:** 32 achievements, a speedrun timer with splits, and Theo's camera (F6).
 

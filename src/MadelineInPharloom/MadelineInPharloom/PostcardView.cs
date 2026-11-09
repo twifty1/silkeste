@@ -50,7 +50,42 @@ public class PostcardView : MonoBehaviour
 
 	private static string TutorialFile => Path.Combine(DataDir ?? "", "tutorial.cfg");
 
+	// once per save file (user 2026-11-09: it came back on files with under 5 minutes played): a per-file flag, which
+	// a deleted or new file starts without; tutorial.cfg only still says which older files have already seen it
 	private static bool TutorialDue(int slot, float playTime)
+	{
+		if (TechTips.Slot >= 0)
+		{
+			if (TechTips.Flag("tutorial"))
+			{
+				return false;
+			}
+			bool seen = false;
+			try
+			{
+				if (DataDir != null && File.Exists(TutorialFile))
+				{
+					foreach (string line in File.ReadAllLines(TutorialFile))
+					{
+						string[] kv = line.Split('=');
+						if (kv.Length == 2 && int.TryParse(kv[0], out var s) && s == slot && float.TryParse(kv[1], NumberStyles.Float, CultureInfo.InvariantCulture, out var at) && playTime + 5f >= at)
+						{
+							seen = true;
+						}
+					}
+				}
+			}
+			catch (Exception ex)
+			{
+				Plugin.Log.LogWarning("Tutorial: " + ex.Message);
+			}
+			TechTips.SetFlag("tutorial");
+			return !seen;
+		}
+		return OldTutorialDue(slot, playTime);
+	}
+
+	private static bool OldTutorialDue(int slot, float playTime)
 	{
 		Dictionary<int, float> dictionary = new Dictionary<int, float>();
 		try
