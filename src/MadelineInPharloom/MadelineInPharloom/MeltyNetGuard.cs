@@ -170,7 +170,8 @@ public static class MeltyNetGuard
 		try
 		{
 			string melty = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "MeltyNetLayer-hollow-knight-silksong", "saves", "silkeste");
-			if (!Directory.Exists(melty))
+			// once Silkeste has its own save folder (SaveSplit), the game's folder is vanilla's: nothing goes back there
+			if (!Directory.Exists(melty) || SaveSplit.AnyMigrated())
 			{
 				return;
 			}

@@ -689,6 +689,16 @@ public static class AssistOptions
 		Description = "When Madeline stands still, a ghost Madeline shows the next Celeste technique beside her (super, hyper, wavedash, then the wall bounce) with your buttons and a timing bar. Do it 3 times to learn it. Each save file has its own lessons."
 	};
 
+	public static readonly AssistRow RosaryDrops = new AssistRow
+	{
+		Id = "rosary_drops",
+		Section = "Game",
+		Label = "Rosary Drops",
+		Values = "0x,0.5x,1x,1.5x,2x,2.5x,3x",
+		Default = "1x",
+		Description = "How many rosaries enemies drop. 1x is the game's own amount, 3x is three times as many, 0x is none. Shell shards aren't changed."
+	};
+
 	public static readonly AssistRow TechRoomButton = new AssistRow
 	{
 		Id = "techroom_btn",
@@ -717,6 +727,6 @@ public static class AssistOptions
 		Backpack, Outfit, HairOne, HairZero, HairLength, HairSize, HairEffect, DashTrail, LandingEffects, DashColourRush, HerName,
 		KeySkin, KeySettings, KeyRecords, KeyCamera, KeyEmote, TitleSky, TitleArea,
 		StartClimb, StartDoubleDash, StartGlide, StartClawline, StartSilkSoar, LightCutscenes,
-		Headwear, TrailShape, Companion, Aura, Footprints, TechRoomButton, SandboxInfiniteDash
+		Headwear, TrailShape, Companion, Aura, Footprints, TechRoomButton, RosaryDrops
 	};
 }

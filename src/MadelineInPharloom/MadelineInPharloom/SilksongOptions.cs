@@ -59,6 +59,11 @@ public static class SilksongOptions
 				foreach (Selectable sel in screens[s].GetComponentsInChildren<Selectable>(true))
 				{
 					AssistRow? row = RowFor(sel, Sections[s], n);
+					// Silksong's Backers toggle (its credits list) isn't wanted here (user 2026-11-10)
+					if (row.HasValue && row.Value.Label.TrimEnd(':', ' ').Equals("Backers", StringComparison.OrdinalIgnoreCase))
+					{
+						continue;
+					}
 					if (row.HasValue)
 					{
 						added.Add(row.Value);

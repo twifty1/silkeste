@@ -1025,6 +1025,7 @@ public class CelesteMenus : MonoBehaviour
 		if (kind == "pause")
 		{
 			EnsureDifficulty();
+			EnsureRecordsRow();
 		}
 		componentsInChildren2 = screen.GetComponentsInChildren<Selectable>(includeInactive: false);
 		foreach (Selectable selectable2 in componentsInChildren2)
@@ -1193,6 +1194,92 @@ public class CelesteMenus : MonoBehaviour
 	}
 
 	private Selectable difficultyRow;
+
+	// ---- the pause menu's Records (user 2026-11-10): a copy of the Options button right under Settings ----------
+	private Selectable recordsRow;
+
+	private void EnsureRecordsRow()
+	{
+		try
+		{
+			if (recordsRow != null && !recordsRow.transform.IsChildOf(screen.transform))
+			{
+				UnityEngine.Object.Destroy(recordsRow.gameObject);
+				recordsRow = null;
+			}
+			Selectable options = null;
+			Selectable quit = null;
+			foreach (Selectable s in screen.GetComponentsInChildren<Selectable>(includeInactive: false))
+			{
+				if (s is RecordsOption || s is LeaveTutorialOption)
+				{
+					continue;
+				}
+				string l = LabelOf(s);
+				if (l.Equals("Options", StringComparison.OrdinalIgnoreCase) || l.Equals("Settings", StringComparison.OrdinalIgnoreCase))
+				{
+					options = s;
+				}
+				else if (l.IndexOf("quit", StringComparison.OrdinalIgnoreCase) >= 0 || l.IndexOf("menu", StringComparison.OrdinalIgnoreCase) >= 0 || l.Equals("Give Up", StringComparison.OrdinalIgnoreCase))
+				{
+					quit = s;
+				}
+			}
+			if (options == null)
+			{
+				return;
+			}
+			if (recordsRow == null)
+			{
+				GameObject go = UnityEngine.Object.Instantiate(options.gameObject, options.transform.parent);
+				go.name = "SilkesteRecords";
+				foreach (Component c in go.GetComponentsInChildren<Component>(true))
+				{
+					if (c != null && (c is Selectable || c.GetType().Name.Contains("Locali") || c.GetType().Name == "Animator" || c is EventTrigger))
+					{
+						UnityEngine.Object.DestroyImmediate(c);
+					}
+				}
+				foreach (Text tx in go.GetComponentsInChildren<Text>(true))
+				{
+					tx.text = "Records";
+				}
+				recordsRow = go.AddComponent<RecordsOption>();
+				recordsRow.transition = Selectable.Transition.None;
+			}
+			recordsRow.transform.SetSiblingIndex(options.transform.GetSiblingIndex() + 1);
+			// up/down: Settings, Records, (Leave Tutorial), Quit
+			Selectable after = (difficultyRow != null && difficultyRow.gameObject.activeInHierarchy) ? difficultyRow : quit;
+			if (difficultyRow != null)
+			{
+				difficultyRow.transform.SetSiblingIndex(recordsRow.transform.GetSiblingIndex() + 1);
+				Navigation nd = difficultyRow.navigation;
+				nd.mode = Navigation.Mode.Explicit;
+				nd.selectOnUp = recordsRow;
+				difficultyRow.navigation = nd;
+			}
+			Navigation n = recordsRow.navigation;
+			n.mode = Navigation.Mode.Explicit;
+			n.selectOnUp = options;
+			n.selectOnDown = after != null ? after : options;
+			recordsRow.navigation = n;
+			Navigation no = options.navigation;
+			no.mode = Navigation.Mode.Explicit;
+			no.selectOnDown = recordsRow;
+			options.navigation = no;
+			if (quit != null && after == quit)
+			{
+				Navigation nq = quit.navigation;
+				nq.mode = Navigation.Mode.Explicit;
+				nq.selectOnUp = recordsRow;
+				quit.navigation = nq;
+			}
+		}
+		catch (Exception e)
+		{
+			Plugin.Log.LogWarning("Pause Records: " + e.Message);
+		}
+	}
 
 	// ---- the title's Continue (user 2026-10-17): a copy of Start Game that loads the save played last ----------
 	private Button continueButton;

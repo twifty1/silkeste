@@ -34,6 +34,15 @@ public class DifficultyOption : Selectable, ISubmitHandler
 	}
 }
 
+/// <summary>The pause menu's Records (user 2026-11-10): unpause, then open Records over the game.</summary>
+public class RecordsOption : Selectable, ISubmitHandler
+{
+	public void OnSubmit(BaseEventData eventData)
+	{
+		BossCard.OpenFromPause();
+	}
+}
+
 /// <summary>The pause menu's Leave Tutorial (user 2026-10-20): asks first, with the moves not learned yet.</summary>
 public class LeaveTutorialOption : Selectable, ISubmitHandler
 {

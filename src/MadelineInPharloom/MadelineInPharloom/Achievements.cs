@@ -1165,7 +1165,14 @@ public class Achievements : MonoBehaviour
 				num17 += num19 + 10f;
 			}
 			num16 += (float)Art.LineHeight * 0.72f + 6f;
-			Art.DrawLine(HowText(def2), num15, num16, 0.46f, soft);
+			// the "don't count" note on the same line as how to earn it: on its own line it ran into "Almost there"
+			// below the card (user 2026-11-10)
+			string how = HowText(def2);
+			if (def2.Kind == Kind.Combat || def2.Kind == Kind.Golden || def2.Id == "speedrunner")
+			{
+				how += " (Moss Grotto and Moss Mother don't count.)";
+			}
+			Art.DrawLine(how, num15, num16, Math.Min(0.46f, (rect2.width - 60f) / Math.Max(1f, Art.Measure(how))), soft);
 			num16 += (float)Art.LineHeight * 0.46f + 8f;
 			if (flag4)
 			{
@@ -1184,10 +1191,6 @@ public class Achievements : MonoBehaviour
 			else
 			{
 				Art.DrawLine("Locked", num15, num16, 0.42f, soft);
-			}
-			if (def2.Kind == Kind.Combat || def2.Kind == Kind.Golden || def2.Id == "speedrunner")
-			{
-				Art.DrawLine("Moss Grotto and Moss Mother don't count.", num15, num16 + (float)Art.LineHeight * 0.42f + 6f, 0.34f, soft);
 			}
 		}
 		GUI.color = Color.white;

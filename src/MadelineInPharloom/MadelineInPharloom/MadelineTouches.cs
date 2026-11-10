@@ -47,6 +47,7 @@ public class MadelineTouches : MonoBehaviour
 			new Harmony("silkeste.bind").Patch(AccessTools.Method(typeof(CheckIsCharacterGrounded), "DoAction"), new HarmonyMethod(typeof(MadelineTouches), "BindGroundPrefix"));
 			MenuInputGuard.Patch(new Harmony("silkeste.menuinput"));
 			CrestHint.Patch(new Harmony("silkeste.crests"));
+			RosaryDrops.Patch(new Harmony("silkeste.rosaries"));
 		}
 		catch (Exception e)
 		{

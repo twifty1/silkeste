@@ -54,5 +54,7 @@ public static class Postcards
 		Unlock = "glide"
 	};
 
-	public static readonly PostcardRow[] All = new PostcardRow[6] { Intro, GrabClimb, SecondDash, Help, SwiftStep, Glide };
+	// Help (the same card as the Tutorial, from a key gone since 2.1) is left out: it could never be found, so Records
+	// showed it as ??? forever (user 2026-11-10)
+	public static readonly PostcardRow[] All = new PostcardRow[5] { Intro, GrabClimb, SecondDash, SwiftStep, Glide };
 }

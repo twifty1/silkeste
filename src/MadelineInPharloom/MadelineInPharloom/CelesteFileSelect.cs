@@ -193,9 +193,78 @@ public class CelesteFileSelect : MonoBehaviour
 
 	private bool begun;
 
+	private float begunAt = -10f;
+
+	// after Begin, the Celeste screen stays up while Silksong loads the save: fading it out at once let Silksong's own
+	// file screen underneath show for a few frames (user 2026-11-10). Not while Silksong asks something itself.
+	private bool HoldAfterBegin(bool silksongAsks)
+	{
+		GameManager gm = GameManager.SilentInstance;
+		bool inMenu = gm == null || gm.IsMenuScene();
+		return begun && inMenu && !silksongAsks && Time.unscaledTime - begunAt < 8f;
+	}
+
 	private int lastSlot = -1;
 
-	private readonly Rect[] optionRects = new Rect[3];
+	private readonly Rect[] optionRects = new Rect[8];
+
+	// ---- "Copy a Silksong save" (user 2026-11-10): on an empty Silkeste file, a Silksong save copied in -------------
+	private bool copyOpen;
+
+	private List<SaveSplit.VanillaFile> copyList = new List<SaveSplit.VanillaFile>();
+
+	private readonly List<string> optionLabels = new List<string>();
+
+	private const string CopyLabel = "Copy a Silksong save";
+
+	private List<string> OptionLabelsFor(SaveSlotButton b)
+	{
+		optionLabels.Clear();
+		if (copyOpen)
+		{
+			foreach (SaveSplit.VanillaFile v in copyList)
+			{
+				optionLabels.Add(SaveSplit.Label(v));
+			}
+			optionLabels.Add("Back");
+			return optionLabels;
+		}
+		optionLabels.Add("Begin");
+		optionLabels.Add("Settings");
+		optionLabels.Add("Skins");
+		if (b != null && b.saveFileState == SaveSlotButton.SaveFileStates.Empty && SaveSplit.SilkDir != null && SaveSplit.CachedVanillaCount() > 0)
+		{
+			optionLabels.Add(CopyLabel);
+		}
+		return optionLabels;
+	}
+
+	private void CopyInto(SaveSlotButton b, SaveSplit.VanillaFile v)
+	{
+		copyOpen = false;
+		if (b == null || !SaveSplit.CopyIn(v.Slot, b.SaveSlotIndex))
+		{
+			Sfx.Play(Sounds.MenuUnpause.Id);
+			return;
+		}
+		int slot = b.SaveSlotIndex;
+		AssistMode.ForgetSlot(slot);
+		RunLog.Forget(slot);
+		TechTips.ForgetSlot(slot);
+		BossCard.ForgetSlot(slot);
+		try
+		{
+			b.ClearCache();
+			b.ResetButton(GameManager.instance);
+		}
+		catch (Exception e)
+		{
+			Plugin.Log.LogWarning("Copy: refreshing file " + slot + ": " + e.Message);
+		}
+		confirmOpen = false;
+		confirmIndex = 0;
+		Sfx.Play(Sounds.MenuButtonSelect.Id);
+	}
 
 	private bool eraseOpen;
 
@@ -254,6 +323,7 @@ public class CelesteFileSelect : MonoBehaviour
 			AssistMode.ForgetSlot(__instance.SaveSlotIndex);
 			RunLog.Forget(__instance.SaveSlotIndex);
 			TechTips.ForgetSlot(__instance.SaveSlotIndex);
+			BossCard.ForgetSlot(__instance.SaveSlotIndex);   // its stats start over under This Save (user 2026-11-10)
 			Plugin.Log.LogInfo("File " + __instance.SaveSlotIndex + " deleted: back to Standard");
 		}
 		catch (Exception e)
@@ -332,6 +402,9 @@ public class CelesteFileSelect : MonoBehaviour
 			}
 		}
 		List<SaveSlotButton> list = new List<SaveSlotButton>();
+		// the cards as they were when Begin was pressed: Silksong hides its slots one by one while it loads, and a
+		// list rebuilt from them each frame put other files' cards in the picked one's place (user 2026-11-10)
+		List<Slot> atBegin = begun ? new List<Slot>(ordered) : null;
 		ordered.Clear();
 		bool flag = false;
 		bool flag2 = false;
@@ -364,6 +437,11 @@ public class CelesteFileSelect : MonoBehaviour
 			slots.Remove(item);
 		}
 		ordered.Sort((Slot x, Slot y) => x.Button.SaveSlotIndex.CompareTo(y.Button.SaveSlotIndex));
+		if (atBegin != null && atBegin.Count > 0 && HoldAfterBegin(flag))
+		{
+			ordered.Clear();
+			ordered.AddRange(atBegin.FindAll((Slot o) => o.Button != null));
+		}
 		bool flag3 = ordered.Count > 0 && flag2 && !flag && !begun;
 		if (flag3 && !active)
 		{
@@ -373,11 +451,12 @@ public class CelesteFileSelect : MonoBehaviour
 		}
 		active = flag3;
 		Showing = active;
-		if (!active)
+		bool hold = HoldAfterBegin(flag);
+		if (!active && !hold)
 		{
 			screenA = Mathf.MoveTowards(screenA, 0f, unscaledDeltaTime / 0.2f);
 		}
-		if (ordered.Count == 0)
+		if (ordered.Count == 0 && !hold)
 		{
 			begun = false;
 		}
@@ -421,6 +500,7 @@ public class CelesteFileSelect : MonoBehaviour
 			{
 				AutoBegin = -1;
 				begun = true;
+				begunAt = Time.unscaledTime;
 				Sfx.Play(Sounds.MenuButtonSelect.Id);
 				current.SetSelectedGameObject(auto.Button.gameObject);
 				ExecuteEvents.Execute(auto.Button.gameObject, new BaseEventData(current), ExecuteEvents.submitHandler);
@@ -505,6 +585,7 @@ public class CelesteFileSelect : MonoBehaviour
 						Plugin.Log.LogInfo("File " + button.SaveSlotIndex + " deleted from the file select");
 						AssistMode.ForgetSlot(button.SaveSlotIndex);
 						RunLog.Forget(button.SaveSlotIndex);
+						BossCard.ForgetSlot(button.SaveSlotIndex);
 					}
 					catch (Exception ex2)
 					{
@@ -515,7 +596,10 @@ public class CelesteFileSelect : MonoBehaviour
 			else if (confirmOpen)
 			{
 				int num4 = confirmIndex;
-				int num5 = 3;   // Begin, Settings and Skins (user 2026-10-19: mode and difficulty moved into the new-file menu)
+				// Begin, Settings and Skins (user 2026-10-19: mode and difficulty moved into the new-file menu), and on an
+				// empty file "Copy a Silksong save"; while copying, Silksong's files and Back
+				List<string> labels = OptionLabelsFor(button);
+				int num5 = labels.Count;
 				if (flag4 || flag6)
 				{
 					confirmIndex = Math.Max(0, confirmIndex - 1);
@@ -537,7 +621,27 @@ public class CelesteFileSelect : MonoBehaviour
 					Sfx.Play(flag4 ? Sounds.MenuRolloverUp.Id : Sounds.MenuRolloverDown.Id);
 				}
 				bool flag15 = flag8 || (flag11 && optionRects[confirmIndex].Contains(point));
-				if (confirmIndex == 1 && flag15)
+				if (copyOpen)
+				{
+					if (flag9 || (flag15 && confirmIndex == num5 - 1))
+					{
+						copyOpen = false;
+						confirmIndex = 3;
+						Sfx.Play(Sounds.MenuUnpause.Id);
+					}
+					else if (flag15 && confirmIndex < copyList.Count)
+					{
+						CopyInto(button, copyList[confirmIndex]);
+					}
+				}
+				else if (confirmIndex == 3 && flag15 && labels.Count > 3 && labels[3] == CopyLabel)
+				{
+					copyList = SaveSplit.VanillaFiles();
+					copyOpen = copyList.Count > 0;
+					confirmIndex = 0;
+					Sfx.Play(Sounds.MenuButtonSelect.Id);
+				}
+				else if (confirmIndex == 1 && flag15)
 				{
 					Sfx.Play(Sounds.MenuButtonSelect.Id);
 					AssistMode.UseSlot(button.SaveSlotIndex);
@@ -561,6 +665,7 @@ public class CelesteFileSelect : MonoBehaviour
 					Action start = delegate
 					{
 						begun = true;
+						begunAt = Time.unscaledTime;
 						Sfx.Play(Sounds.MenuButtonSelect.Id);
 						RememberSlot(b.SaveSlotIndex);
 						if (es != null && b != null)
@@ -576,6 +681,8 @@ public class CelesteFileSelect : MonoBehaviour
 					if (fresh)
 					{
 						TechTips.ForgetSlot(b.SaveSlotIndex);   // a new file: the Tech Tutorial question and lessons start over
+						BossCard.ForgetSlot(b.SaveSlotIndex);   // and This Save's boss stats (user 2026-11-10)
+						RunLog.Forget(b.SaveSlotIndex);
 						StartingAbilities.OpenMenu(start, b.SaveSlotIndex);
 					}
 					else
@@ -622,6 +729,8 @@ public class CelesteFileSelect : MonoBehaviour
 				{
 					confirmOpen = true;
 					confirmIndex = 0;
+					copyOpen = false;
+					OptionLabelsFor(button);
 					Sfx.Play(Sounds.MenuPause.Id);
 				}
 				else if (flag9 && button.backButton != null && current != null)
@@ -992,7 +1101,16 @@ public class CelesteFileSelect : MonoBehaviour
 		float num2 = Mathf.Sin(unscaledTime * 0.031f) * sw * 0.012f + ExtraPan;
 		float num3 = Mathf.Sin(unscaledTime * 0.043f) * 6f;
 		GUI.color = new Color(1f, 1f, 1f, a);
-		GUI.DrawTexture(new Rect((sw - sw * num) / 2f + num2, (1080f - 1080f * num) / 2f + num3, sw * num, 1080f * num), Sky());
+		// Celeste's own 3D mountain when it's ready (TitleMountain3D, user 2026-11-10), else the painted one
+		Texture celeste = TitleMountain3D.Frame();
+		if (celeste != null)
+		{
+			GUI.DrawTexture(new Rect(0f, 0f, sw, 1080f), celeste);
+		}
+		else
+		{
+			GUI.DrawTexture(new Rect((sw - sw * num) / 2f + num2, (1080f - 1080f * num) / 2f + num3, sw * num, 1080f * num), Sky());
+		}
 		float num4 = Mathf.Repeat(unscaledTime, 11f);
 		if (num4 < 0.9f)
 		{
@@ -1338,8 +1456,12 @@ public class CelesteFileSelect : MonoBehaviour
 
 	private void Options(float sw, float a)
 	{
-		string[] array = new string[3] { "Begin", "Settings", "Skins" };
-		float[] array2 = new float[3] { 1f, 0.75f, 0.75f };
+		string[] array = optionLabels.Count > 0 ? optionLabels.ToArray() : new string[3] { "Begin", "Settings", "Skins" };
+		float[] array2 = new float[array.Length];
+		for (int k = 0; k < array.Length; k++)
+		{
+			array2[k] = copyOpen ? 0.6f : (k == 0 ? 1f : 0.75f);
+		}
 		float num = 520f;
 		float unscaledTime = Time.unscaledTime;
 		Color color = ((unscaledTime % 0.2f < 0.1f) ? Hex("84FF54") : Hex("FCFF59"));

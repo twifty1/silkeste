@@ -10,6 +10,12 @@
 - **Make her yours:** 11 skins, 29 hair colours, hats, a Celeste companion (the bird, berries, a crystal heart...), auras and emotes.
 - **Feels like Celeste:** the title screen, menus and save files look like Celeste's, conversations use Celeste's text boxes, dying plays Celeste's death burst and respawn, and resting at a bench is like sitting by Celeste's campfire.
 
+### New in 2.4
+- **Its own save files:** Silkeste has 4 save files of its own, apart from Silksong's, so you never have to delete a Hornet or modded file to play. Files you played with Silkeste move over by themselves (after a backup of all your saves), and an empty file can copy in any Silksong save.
+- **Records per save file,** with all-time bests under All Saves, a Reset stats button for each boss, and Records in the pause menu.
+- **Smoother:** wall jumps work on every wall, Hornet's own moves never slip through, you can look up and down, and the start screen no longer stutters.
+- **Rosary Drops:** up to 3x the rosaries from enemies (Settings > Game).
+
 ### New in 2.3.4
 - **Feels more like Celeste:** a split-second freeze when you dash, controller rumble, and a smaller hurt area like Celeste's (smaller still when you duck).
 - **No more lag or stuck dialogue:** Silkeste is single-player, so Melty's multiplayer layer stays out of it.
@@ -40,5 +46,6 @@ Everything can be rebound in Settings.
 - **Don't spam your dash:** after a hit you wait a moment, and her hair turns blue until it's back.
 - **Celeste's Assist Mode, Variants and Challenges** for easier, silly or brutal runs.
 - **Extras:** 32 achievements, a speedrun timer with splits, and Theo's camera (F6).
+- **Saves:** Silkeste's files are in Silksong's save folder under "Silkeste". Steam Cloud may not back that folder up, so copy it yourself if you play on another PC.
 
 *Fan-made and not affiliated with Team Cherry or Maddy Makes Games. Celeste, Madeline and Badeline belong to Maddy Makes Games (Extremely OK Games). Hollow Knight: Silksong belongs to Team Cherry. Made by Twifty. MIT license, remixes welcome.*

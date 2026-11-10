@@ -5,6 +5,12 @@ Madeline's art and sounds are read from your Celeste install when the game start
 
 Controls (keyboard): WASD move, Space jump, mouse dash, Shift grab. F1 settings, F3 records, 1-8 emotes (right stick on a controller).
 
+Your saves: Silkeste has its own 4 save files, apart from Silksong's, in
+%USERPROFILE%\AppData\LocalLow\Team Cherry\Hollow Knight Silksong\<your Steam ID>\Silkeste
+The first time, files you played with Silkeste are moved there (a backup of all your saves goes to
+%LOCALAPPDATA%\MadelineInPharloom\save_backup). An empty file can copy in a Silksong save ("Copy a Silksong save").
+Steam Cloud may not back up the Silkeste folder: copy it yourself if you play on another PC.
+
 2.1.0: Much smoother menus, title screen and cutscenes (no more slow-motion cutscenes). New-file menu (Pack for the climb): game mode, difficulty and optional starting abilities (Cling Grip, Faydown Cloak, Drifter's Cloak, Clawline, Silk Soar; any on makes it an assist save). Sandbox stays on a file until it's deleted; deleting a file resets it. Difficulty in the pause menu. With two dashes, one hit leaves the other dash free, two hits in a row lock it twice as long. 8 emotes on keys 1-8 or the right stick, with an Emotes menu to see and rebind them. Customizing: headwear, companions from Celeste, aura, footprints and dash trail shapes, shown in the preview. Hair drawn into Celeste's sprites now matches your colours, and her hair shows her most dashes in cutscenes. Records moves to F3, Reset Splits to F5; the Tutorial and Timer keys are gone. Light Cutscenes option for slow PCs.
 2.0.3: The game no longer closes by itself at the start: the Quit game? question stays on No while it opens, the mouse no longer picks Yes just by resting over it (click it instead), and a press that lands as it opens is ignored.
 2.0.2: The download now includes the license files (LICENSE.txt for Silkeste, THIRD_PARTY_LICENSES.txt for NVorbis and python-fsb5). Madeline's sleeping bag on the loading screen only comes out at night, and the Records scroll arrow sits clear of the list.

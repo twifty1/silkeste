@@ -850,6 +850,34 @@ public class MadelineController
 		jumpImmune = true;
 	}
 
+	private static readonly System.Reflection.MethodInfo HornetCancelDash = HarmonyLib.AccessTools.Method(typeof(HeroController), "CancelDash", new Type[1] { typeof(bool) });
+
+	// while Madeline drives, nothing of Hornet's may still be running: a dash, sprint or needle swing that started in
+	// a moment she wasn't driving (a silk skill's end, a bench, the map) is cut off at once (player report 2026-11-10)
+	private static void StopHornetMoves(HeroController h)
+	{
+		try
+		{
+			if ((h.cState.dashing || h.cState.airDashing || h.cState.isSprinting) && HornetCancelDash != null)
+			{
+				HornetCancelDash.Invoke(h, new object[1] { true });
+				h.cState.isSprinting = false;
+				if (MadelineTouches.DevOn)
+				{
+					Plugin.Log.LogInfo("Hornet's dash/sprint was running while Madeline drove: stopped");
+				}
+			}
+			if (h.cState.attacking)
+			{
+				h.CancelAttack();
+			}
+		}
+		catch (Exception e)
+		{
+			Plugin.Log.LogWarning("Stopping Hornet's moves: " + e.Message);
+		}
+	}
+
 	public static bool ShouldDrive(HeroController h)
 	{
 		GameManager gameManager = Gm(h);
@@ -974,6 +1002,7 @@ public class MadelineController
 		{
 			Activate(h, rigidbody2D);
 		}
+		StopHornetMoves(h);
 		if (hitSource == null)
 		{
 			hitSource = new GameObject("MadelineDashHit");
@@ -1907,6 +1936,7 @@ public class MadelineController
 			else if (AirJumpsAllowed() <= airJumps)
 			{
 				glideArmed = true;   // a press with no jump left opens the glide
+				LogNoWallJump(h);
 			}
 			else if (AirJumpsAllowed() > airJumps)
 			{
@@ -2030,6 +2060,45 @@ public class MadelineController
 		Particles.Dust(Feet(), -MathF.PI / 2f, 4);
 	}
 
+	// dev log (user 2026-11-10: next to a wall, Jump opened the jellyfish instead of a wall jump): what she saw
+	private void LogNoWallJump(HeroController h)
+	{
+		if (!MadelineTouches.DevOn)
+		{
+			return;
+		}
+		try
+		{
+			Bounds b = Col(h).bounds;
+			System.Text.StringBuilder sb = new System.Text.StringBuilder("No wall jump, glide armed: climb " + Unlocked(Unlocks.GrabClimb) + ", stamina " + Stamina.ToString("0") + ", grab " + grabHeld + ", facing " + Facing + ", moveX " + moveX + ", speed " + Speed.ToString("0") + ", box " + (b.size.x * 8f).ToString("0.0") + "x" + (b.size.y * 8f).ToString("0.0") + "px");
+			for (int dir = -1; dir <= 1; dir += 2)
+			{
+				sb.Append(dir < 0 ? " | left:" : " | right:");
+				for (int px = 1; px <= 8; px++)
+				{
+					if (Solid(h, dir * px, 0f))
+					{
+						sb.Append(" solid at " + px + "px");
+						break;
+					}
+				}
+				Collider2D[] near = Physics2D.OverlapBoxAll((Vector2)b.center + new Vector2(dir * (b.extents.x + 0.5f), 0f), new Vector2(1f, b.size.y), 0f);
+				foreach (Collider2D c in near)
+				{
+					if (c != null && !c.isTrigger && !c.transform.IsChildOf(h.transform))
+					{
+						sb.Append(" [" + c.name + " layer " + LayerMask.LayerToName(c.gameObject.layer) + (Blocks(Col(h), c) ? "" : " not-solid") + "]");
+					}
+				}
+			}
+			Plugin.Log.LogInfo(sb.ToString());
+		}
+		catch (Exception e)
+		{
+			Plugin.Log.LogWarning("No wall jump log: " + e.Message);
+		}
+	}
+
 	private bool WallJumpCheck(HeroController h, int dir)
 	{
 		if (!Unlocked(Unlocks.GrabClimb))
@@ -2040,8 +2109,17 @@ public class MadelineController
 		{
 			return false;
 		}
-		float num = ((DashAttacking && DashDir.x == 0f && DashDir.y == -1f) ? 5f : 5f);
-		return Solid(h, (float)dir * num, 0f);
+		// every distance up to 5 px, not only 5 (user 2026-11-10: some walls gave the jellyfish instead): her box is
+		// Hornet's, 4 px wide, so moved 5 px it can sit wholly inside a wall made of an outline collider, touching no
+		// edge, and the wall isn't seen
+		for (int px = 1; px <= 5; px++)
+		{
+			if (Solid(h, (float)dir * px, 0f))
+			{
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private void WallJump(int dir)

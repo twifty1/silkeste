@@ -523,6 +523,15 @@ public class AssistMode : MonoBehaviour
 		}
 	}
 
+	/// <summary>Settings > Game > Rosary Drops: 0 to 3 (user 2026-11-10).</summary>
+	public static float RosaryDrops
+	{
+		get
+		{
+			return float.TryParse(Value(AssistOptions.RosaryDrops).TrimEnd('x'), NumberStyles.Float, CultureInfo.InvariantCulture, out var m) ? m : 1f;
+		}
+	}
+
 	public static float GameSpeed
 	{
 		get
@@ -620,7 +629,7 @@ public class AssistMode : MonoBehaviour
 			}
 			// Sandbox files dash forever unless Game > Sandbox: Infinite Dashes is off (user 2026-10-21); Assist's Dash Count,
 			// when set, wins
-			return ModeId == "sandbox" && Value(AssistOptions.SandboxInfiniteDash) == "On" ? -1 : -2;
+			return ModeId == "sandbox" ? -1 : -2;   // Sandbox always has infinite dashes (its setting row removed, user 2026-11-10)
 		}
 	}
 
@@ -2005,11 +2014,8 @@ public class AssistMode : MonoBehaviour
 		}
 		if (a != null)
 		{
-			if (!a.Dash.WasPressed)
-			{
-				return a.MenuCancel.WasPressed;
-			}
-			return true;
+			// not the game's Dash: that's Shift / R2, her grab (user 2026-11-10: Shift closed menus)
+			return a.MenuCancel.WasPressed;
 		}
 		return false;
 	}

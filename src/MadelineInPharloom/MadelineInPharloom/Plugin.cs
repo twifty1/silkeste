@@ -255,6 +255,7 @@ public class Plugin : BaseUnityPlugin
 	{
 		Log = base.Logger;
 		MeltyNetGuard.Install();
+		SaveSplit.Install(new Harmony("silkeste.saves")); LookupThrottle.Patch(new Harmony("silkeste.lookups"));
 		string text = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "MadelineInPharloom");
 		skinFile = Path.Combine(text, "skin.cfg");
 		controlsFile = Path.Combine(text, "controls.cfg");
@@ -320,6 +321,8 @@ public class Plugin : BaseUnityPlugin
 			base.gameObject.AddComponent<TechTipsGui>();
 			base.gameObject.AddComponent<RecordsHint>();
 			base.gameObject.AddComponent<CrestHint>();
+			base.gameObject.AddComponent<SaveSplit>();
+			// base.gameObject.AddComponent<TitleMountain3D>();   // off: without Celeste's mountain shader it looked wrong (user 2026-11-10)
 			base.gameObject.AddComponent<TechRoom>();
 			AssistMode.DataDir = (BossCard.DataDir = (SpeedrunTimer.DataDir = text));
 			BossCard.ResetFlag = Path.Combine(Path.GetDirectoryName(base.Info.Location), "reset_records.flag");
@@ -615,6 +618,33 @@ public class Plugin : BaseUnityPlugin
 		}
 	}
 
+	// Silksong's look up/down only runs while Hornet may attack (HeroController.LookForInput checks CanAttack), and her
+	// needle is blocked, so Madeline never looked (user 2026-11-10). The same rules here: standing still, hold down or
+	// up 0.85 s (the game's LOOK_DELAY), or the right stick at once; the camera follows cState.lookingDown/Up.
+	private static float lookTimer;
+
+	private static void UpdateLook()
+	{
+		HeroController h = HeroController.UnsafeInstance;
+		if (h == null || !Controller.Active)
+		{
+			lookTimer = 0f;
+			return;
+		}
+		HeroActions a = ManagerSingleton<InputHandler>.Instance?.inputActions;
+		if (a == null)
+		{
+			return;
+		}
+		bool still = Controller.OnGround && Controller.State == 0 && Math.Abs(Controller.Speed.x) < 1f && !AssistMode.IsOpen && !BossCard.RecordsOpen;
+		int dir = !still ? 0 : (a.Down.IsPressed || a.RsDown.IsPressed) ? 2 : (a.Up.IsPressed || a.RsUp.IsPressed) ? 1 : 0;
+		bool stick = (dir == 2 && a.RsDown.IsPressed) || (dir == 1 && a.RsUp.IsPressed);
+		lookTimer = dir == 0 ? 0f : lookTimer + Time.deltaTime;
+		bool look = dir != 0 && (stick || lookTimer >= 0.85f);
+		h.cState.lookingDown = look && dir == 2;
+		h.cState.lookingUp = look && dir == 1;
+	}
+
 	private static BoxCollider2D hurtBox;
 
 	private static Vector2 hurtSize;
@@ -687,6 +717,7 @@ public class Plugin : BaseUnityPlugin
 		SetDefaultControlsOnce();
 		FitHurtBox();
 		Feel.Tick();
+		UpdateLook();
 		if (assets == null)
 		{
 			if (prepareError != null)
@@ -1064,14 +1095,24 @@ public class Plugin : BaseUnityPlugin
 		}
 	}
 
+	// Hornet's own moves (jump, dash, sprint, needle, walls, ledge clamber) never start while Madeline is in the game,
+	// not only while she drives: coming off a bench, the map, a silk skill used to leave a frame or two where a press
+	// became a Hornet dash, slash or sprint (player report 2026-11-10). Swimming is the one thing still Hornet's.
 	private static bool BlockWhileActive(ref bool __result)
 	{
-		if (!Controller.Active)
+		if (!Controller.Active && !HornetBlocked())
 		{
 			return true;
 		}
 		__result = false;
 		return false;
+	}
+
+	private static bool HornetBlocked()
+	{
+		HeroController h = HeroController.UnsafeInstance;
+		GameManager gm = GameManager.SilentInstance;
+		return Ready && h != null && gm != null && !gm.IsMenuScene() && !h.cState.swimming;
 	}
 
 	private static void DelayFadePrefix(ref float waitTime)

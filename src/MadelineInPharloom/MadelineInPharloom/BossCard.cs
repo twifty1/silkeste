@@ -824,6 +824,22 @@ public class BossCard : MonoBehaviour
 		return stringBuilder.ToString().Trim();
 	}
 
+	private static float openFromPauseAt = -1f;
+
+	/// <summary>The pause menu's Records row: the game unpauses, then Records opens over it as with its key.</summary>
+	public static void OpenFromPause()
+	{
+		openFromPauseAt = Time.unscaledTime;
+		try
+		{
+			UIManager.instance.TogglePauseGame();
+		}
+		catch (Exception e)
+		{
+			Plugin.Log.LogWarning("Records from pause: " + e.Message);
+		}
+	}
+
 	private void UpdateViewer(HeroController h, GameManager gm)
 	{
 		Keyboard current = Keyboard.current;
@@ -834,8 +850,14 @@ public class BossCard : MonoBehaviour
 		{
 			viewT = Math.Max(0f, viewT - unscaledDeltaTime / 0.15f);
 			bool flag = h != null && gm.GameState == GameState.PLAYING && !gm.isPaused && !h.cState.dead && !h.cState.transitioning;
-			if ((AssistMode.KeyPressed(AssistOptions.KeyRecords) || MenuMouse.SharePressed()) && flag && phase == Phase.None && !AssistMode.IsOpen)
+			bool fromPause = openFromPauseAt > 0f && Time.unscaledTime - openFromPauseAt < 2f;
+			if (!fromPause)
 			{
+				openFromPauseAt = -1f;
+			}
+			if ((AssistMode.KeyPressed(AssistOptions.KeyRecords) || MenuMouse.SharePressed() || fromPause) && flag && phase == Phase.None && !AssistMode.IsOpen)
+			{
+				openFromPauseAt = -1f;
 				viewing = true;
 				viewIndex = 0;
 				viewPad = false;
@@ -857,7 +879,7 @@ public class BossCard : MonoBehaviour
 			return;
 		}
 		viewT = Math.Min(1f, viewT + unscaledDeltaTime / 0.15f);
-		bool flag2 = CloseRequested || AssistMode.KeyPressed(AssistOptions.KeyRecords) || MenuMouse.SharePressed() || (current != null && (current.escapeKey.wasPressedThisFrame || current.backspaceKey.wasPressedThisFrame)) || (heroActions != null && (heroActions.Dash.WasPressed || heroActions.MenuCancel.WasPressed));
+		bool flag2 = CloseRequested || AssistMode.KeyPressed(AssistOptions.KeyRecords) || MenuMouse.SharePressed() || (current != null && (current.escapeKey.wasPressedThisFrame || current.backspaceKey.wasPressedThisFrame)) || (heroActions != null && heroActions.MenuCancel.WasPressed);   // not the game's Dash: that's Shift / R2, her grab (user 2026-11-10)
 		try
 		{
 			InControl.InputDevice activeDevice = InputManager.ActiveDevice;
@@ -931,6 +953,22 @@ public class BossCard : MonoBehaviour
 				actFilter = i;
 				viewIndex = 0;
 				Sfx.Play(Sounds.MenuRolloverDown.Id);
+				return;
+			}
+		}
+		if (viewTab == 0 && resetKey != null)
+		{
+			bool padReset = false;
+			try
+			{
+				padReset = InputManager.ActiveDevice != null && InputManager.ActiveDevice.Action4.WasPressed;
+			}
+			catch (Exception)
+			{
+			}
+			if (MenuMouse.Clicked(resetRect) || padReset || (current != null && current.rKey.wasPressedThisFrame))
+			{
+				PressResetStats();
 				return;
 			}
 		}
@@ -2425,11 +2463,113 @@ public class BossCard : MonoBehaviour
 		float num10 = rect2.yMax + 14f;
 		Ink2(text2, rect.center.x - Art.Measure(text2) * num9 / 2f, num10, num9, A(Ink, alpha));
 		num10 += (float)Art.LineHeight * num9 + 2f;
-		string text3 = ((value.Time >= 0f) ? ("Best " + FormatTime(value.Time)) : ((value.Time < -1.5f) ? "Not yet encountered..." : "Beaten before Silkeste"));
+		string text3 = ((value.Time >= 0f) ? ("Best " + FormatTime(value.Time)) : ((value.Time < -1.5f) ? "Not yet encountered..." : (Math.Abs(value.Time - StatsReset) < 0.01f) ? "Stats reset" : "Beaten before Silkeste"));
 		Ink2(text3, rect.center.x - Art.Measure(text3) * 0.45f / 2f, num10, 0.45f, A(InkSoft, alpha));
 		num10 += (float)Art.LineHeight * 0.45f + 14f;
+		num10 = DrawResetStats(rect, num10, key, slot, alpha);
 		DrawBerryCard(new Rect(rect.x, num10, rect.width, area.yMax - num10), key, slot, flag, alpha);
 		DrawRematch(rect2, key, alpha);
+	}
+
+	// ---- Reset stats (user 2026-11-10: restarted files left a boss's stats wrong) ----------------------------------
+	// one boss's time, deaths, hits, heals, dashes and golden berry back to empty: on this file, or on every file when
+	// Records shows all files. The boss stays in the list. Asks once more before it resets.
+
+	private const float StatsReset = -1.25f;   // a record's Time after a reset: beaten, but no stats
+
+	private Rect resetRect;
+
+	private string resetKey;
+
+	private int resetSlot;
+
+	private string resetArmedFor;
+
+	private float resetArmedAt = -10f;
+
+	private bool ResetArmed => resetArmedFor == resetKey && Time.unscaledTime - resetArmedAt < 3f;
+
+	private float DrawResetStats(Rect area, float y, string key, int slot, float alpha)
+	{
+		resetKey = null;
+		if (key.StartsWith("unseen:", StringComparison.Ordinal) || !HasStats(key, slot))
+		{
+			return y;
+		}
+		resetKey = key;
+		resetSlot = slot;
+		string label = ResetArmed ? "Press again to reset" : "Reset stats";
+		string pad = viewPad ? " (Triangle / Y)" : " (R)";
+		string text = label + pad;
+		float s = 0.35f;
+		float w = Art.Measure(text) * s + 28f;
+		float hh = (float)Art.LineHeight * s + 10f;
+		resetRect = new Rect(area.center.x - w / 2f, y, w, hh);
+		bool hover = resetRect.Contains(MenuMouse.Gui());
+		GUI.color = ResetArmed ? new Color(0.75f, 0.2f, 0.25f, 0.9f * alpha) : (hover ? A(InkSoft, 0.35f * alpha) : A(InkSoft, 0.18f * alpha));
+		GUI.DrawTexture(resetRect, Texture2D.whiteTexture);
+		Ink2(text, resetRect.x + 14f, resetRect.y + 5f, s, ResetArmed ? new Color(1f, 1f, 1f, alpha) : A(Ink, alpha));
+		return y + hh + 12f;
+	}
+
+	private IEnumerable<string> StatKeys(string key, int slot)
+	{
+		string tail = "|" + key;
+		foreach (string k in new List<string>(best.Keys))
+		{
+			if (viewAll ? k.EndsWith(tail, StringComparison.Ordinal) : k == Key(slot, key))
+			{
+				yield return k;
+			}
+		}
+	}
+
+	private bool HasStats(string key, int slot)
+	{
+		foreach (string k in StatKeys(key, slot))
+		{
+			Record r = best[k];
+			if (r.Time >= 0f || r.Deaths > 0 || r.Hits > 0 || r.Heals > 0 || r.Dashes > 0 || goldens.Contains(k) || (deaths.TryGetValue(k, out var d) && d > 0))
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
+	// first press arms it, a second within 3 s resets
+	private void PressResetStats()
+	{
+		if (resetKey == null)
+		{
+			return;
+		}
+		if (!ResetArmed)
+		{
+			resetArmedFor = resetKey;
+			resetArmedAt = Time.unscaledTime;
+			Sfx.Play(Sounds.MenuRolloverDown.Id);
+			return;
+		}
+		resetArmedFor = null;
+		int n = 0;
+		foreach (string k in StatKeys(resetKey, resetSlot))
+		{
+			best[k] = new Record
+			{
+				Time = StatsReset,
+				Deaths = -1,
+				Dashes = -1,
+				Hits = -1,
+				Heals = -1
+			};
+			deaths.Remove(k);
+			goldens.Remove(k);
+			n++;
+		}
+		Save();
+		Sfx.Play(Sounds.MenuButtonSelect.Id);
+		Plugin.Log.LogInfo("Boss records: stats reset for " + resetKey + " (" + n + (viewAll ? " files)" : " file)"));
 	}
 
 	// a Rematch button over the bottom of the portrait, for the bosses that can be fought again
@@ -2973,7 +3113,9 @@ public class BossCard : MonoBehaviour
 		deaths.TryGetValue(text, out var value);
 		bool flag2 = HasGolden(fight.Id);
 		bool flag3 = (fight.FirstTry || fight.Heals == 0) && !fight.Assist;
-		if (flag3 && !flag2)
+		// per file: a berry an earlier file in this slot won (now kept under All Saves) doesn't stop this file earning
+		// its own (2026-11-10)
+		if (flag3 && !goldens.Contains(text))
 		{
 			goldens.Add(text);
 			RunLog.Add("golden", TitleOf(fight.Id));
@@ -3049,6 +3191,61 @@ public class BossCard : MonoBehaviour
 			}
 		}
 		return false;
+	}
+
+	/// <summary>
+	/// A file deleted or started over in this slot (user 2026-11-10: "restarting and already having your deaths and
+	/// tries recorded is odd"): its boss and area stats move to a past-file key, so This Save starts empty while All
+	/// Saves still counts them (all-time best times, golden berries).
+	/// </summary>
+	public static void ForgetSlot(int slot)
+	{
+		BossCard b = Instance;
+		if (b == null)
+		{
+			return;
+		}
+		try
+		{
+			string from = slot.ToString(CultureInfo.InvariantCulture) + "|";
+			string to = "past" + slot.ToString(CultureInfo.InvariantCulture) + "-" + DateTime.UtcNow.Ticks.ToString(CultureInfo.InvariantCulture) + "|";
+			int n = Rekey(b.best, from, to) + Rekey(b.deaths, from, to) + Rekey(b.areaTime, from, to) + Rekey(b.areaDeaths, from, to) + Rekey(b.areaKills, from, to);
+			foreach (string g in new List<string>(b.goldens))
+			{
+				if (g.StartsWith(from, StringComparison.Ordinal))
+				{
+					b.goldens.Remove(g);
+					b.goldens.Add(to + g.Substring(from.Length));
+					n++;
+				}
+			}
+			b.importedSlots.Remove(slot);
+			if (n > 0)
+			{
+				b.Save();
+				Plugin.Log.LogInfo("Boss records: file " + slot + " starts over (" + n + " stats kept under All Saves)");
+			}
+		}
+		catch (Exception e)
+		{
+			Plugin.Log.LogWarning("Boss records: file " + slot + ": " + e.Message);
+		}
+	}
+
+	private static int Rekey<T>(Dictionary<string, T> d, string from, string to)
+	{
+		int n = 0;
+		foreach (string k in new List<string>(d.Keys))
+		{
+			if (k.StartsWith(from, StringComparison.Ordinal))
+			{
+				T v = d[k];
+				d.Remove(k);
+				d[to + k.Substring(from.Length)] = v;
+				n++;
+			}
+		}
+		return n;
 	}
 
 	private int GoldenTotal()
